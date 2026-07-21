@@ -651,6 +651,7 @@ public class FineractProperties {
 
         private FineractInvestorModuleProperties investor;
         private FineractLoanOriginationModuleProperties loanOrigination;
+        private FineractLeadModuleProperties lead;
     }
 
     @Getter
@@ -662,6 +663,12 @@ public class FineractProperties {
     @Getter
     @Setter
     public static class FineractLoanOriginationModuleProperties extends AbstractFineractModuleProperties {
+
+    }
+
+    @Getter
+    @Setter
+    public static class FineractLeadModuleProperties extends AbstractFineractModuleProperties {
 
     }
 
