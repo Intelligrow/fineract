@@ -259,4 +259,5 @@
     <include file="parts/0238_transaction_summary_report_update_originator_inline_join.xml" relativeToChangelogFile="true" />
     <include file="parts/0239_add_retained_earning_job.xml" relativeToChangelogFile="true"/>
     <include file="parts/0240_add_retained_earning_global_configuration.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0242_add_mobile_no_to_m_appuser.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
