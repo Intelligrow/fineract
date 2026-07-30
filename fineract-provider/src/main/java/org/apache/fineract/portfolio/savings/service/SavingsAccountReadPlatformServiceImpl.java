@@ -1234,6 +1234,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         SavingsAccountTransactionTemplateMapper() {
             final StringBuilder sqlBuilder = new StringBuilder(400);
             sqlBuilder.append("sa.id as id, sa.account_no as accountNo, ");
+            sqlBuilder.append("coalesce(c.office_id, g.office_id) as officeId, ");
             sqlBuilder.append(
                     "sa.currency_code as currencyCode, sa.currency_digits as currencyDigits, sa.currency_multiplesof as inMultiplesOf, ");
             sqlBuilder.append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ");
@@ -1253,6 +1254,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         public SavingsAccountTransactionData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
 
             final Long savingsId = rs.getLong("id");
+            final Long officeId = rs.getLong("officeId");
             final String accountNo = rs.getString("accountNo");
 
             final String currencyCode = rs.getString("currencyCode");
@@ -1264,7 +1266,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMultiplesOf, currencyDisplaySymbol,
                     currencyNameCode);
 
-            return SavingsAccountTransactionData.template(savingsId, accountNo, DateUtils.getBusinessLocalDate(), currency);
+            return SavingsAccountTransactionData.template(savingsId, accountNo, DateUtils.getBusinessLocalDate(), currency).setOfficeId(officeId);
         }
     }
 

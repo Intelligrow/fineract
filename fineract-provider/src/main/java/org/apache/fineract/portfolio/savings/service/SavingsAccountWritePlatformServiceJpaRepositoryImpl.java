@@ -73,6 +73,7 @@ import org.apache.fineract.infrastructure.event.business.domain.savings.SavingsC
 import org.apache.fineract.infrastructure.event.business.domain.savings.SavingsPostInterestBusinessEvent;
 import org.apache.fineract.infrastructure.event.business.service.BusinessEventNotifierService;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.organisation.agentcollection.service.AgentCollectionWritePlatformService;
 import org.apache.fineract.organisation.holiday.domain.HolidayRepositoryWrapper;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
@@ -169,6 +170,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
     private final SavingsAccountActivationService savingsAccountActivationService;
     private final ExternalIdFactory externalIdFactory;
     private final ErrorHandler errorHandler;
+    private final AgentCollectionWritePlatformService agentCollectionWritePlatformService;
 
     @Transactional
     @Override
@@ -334,6 +336,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
             final Note note = Note.savingsTransactionNote(account, deposit, noteText);
             this.noteRepository.save(note);
         }
+        this.agentCollectionWritePlatformService.recordSavingsDepositCollection(deposit);
 
         return new CommandProcessingResultBuilder() //
                 .withEntityId(deposit.getId()) //

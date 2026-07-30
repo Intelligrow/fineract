@@ -41,6 +41,9 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.commands.domain.CommandWrapper;
@@ -57,6 +60,7 @@ import org.apache.fineract.infrastructure.core.serialization.JsonParserHelper;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.infrastructure.core.service.PagedLocalRequest;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.organisation.agentcollection.service.AgentCollectionTemplateService;
 import org.apache.fineract.portfolio.paymenttype.data.PaymentTypeData;
 import org.apache.fineract.portfolio.paymenttype.service.PaymentTypeReadService;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
@@ -84,6 +88,7 @@ public class SavingsAccountTransactionsApiResource {
     private final ApiRequestParameterHelper apiRequestParameterHelper;
     private final SavingsAccountReadPlatformService savingsAccountReadPlatformService;
     private final PaymentTypeReadService paymentTypeReadPlatformService;
+    private final AgentCollectionTemplateService agentCollectionTemplateService;
     private final SavingsAccountTransactionSearchService transactionsSearchService;
 
     @GET
@@ -114,10 +119,13 @@ public class SavingsAccountTransactionsApiResource {
         SavingsAccountTransactionData savingsAccount = this.savingsAccountReadPlatformService
                 .retrieveDepositTransactionTemplate(resolvedSavingsId, DepositAccountType.SAVINGS_DEPOSIT);
         final Collection<PaymentTypeData> paymentTypeOptions = this.paymentTypeReadPlatformService.retrieveAllPaymentTypes();
-        savingsAccount = SavingsAccountTransactionData.templateOnTop(savingsAccount, paymentTypeOptions);
+
+        SavingsAccountTransactionData templateDate =  this.agentCollectionTemplateService
+                .getSavingsDepositTemplateData(savingsAccount, paymentTypeOptions)
+                .orElseGet(() -> SavingsAccountTransactionData.templateOnTop(savingsAccount, paymentTypeOptions));
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
-        return this.toApiJsonSerializer.serialize(settings, savingsAccount,
+        return this.toApiJsonSerializer.serialize(settings, templateDate,
                 SavingsApiSetConstants.SAVINGS_TRANSACTION_RESPONSE_DATA_PARAMETERS);
     }
 

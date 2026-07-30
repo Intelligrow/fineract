@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.domain.LocalDateInterval;
 import org.apache.fineract.infrastructure.core.jersey.serializer.legacy.JsonLocalDateArrayFormat;
@@ -81,6 +82,7 @@ public class SavingsAccountTransactionData implements Serializable {
     private final Boolean lienTransaction;
     private final Long releaseTransactionId;
     private final String reasonForBlock;
+    private Long officeId;
     private final Set<SavingsAccountChargesPaidByData> chargesPaidByData = new HashSet<>();
 
     // templates
@@ -111,6 +113,7 @@ public class SavingsAccountTransactionData implements Serializable {
 
     private Long accountCredit;
     private Long accountDebit;
+    private Object agentCollection;
 
     protected SavingsAccountTransactionData(final Long id, final SavingsAccountTransactionEnumData transactionType,
             final PaymentDetailData paymentDetailData, final Long savingsId, final String savingsAccountNo, final ExternalId externalId,
@@ -262,7 +265,8 @@ public class SavingsAccountTransactionData implements Serializable {
                 savingsAccountTransactionData.getRunningBalance(), savingsAccountTransactionData.isReversed(),
                 savingsAccountTransactionData.getTransfer(), paymentTypeOptions, savingsAccountTransactionData.getSubmittedOnDate(),
                 savingsAccountTransactionData.isInterestedPostedAsOn(), savingsAccountTransactionData.getSubmittedByUsername(),
-                savingsAccountTransactionData.getNote(), savingsAccountTransactionData.getLienTransaction());
+                savingsAccountTransactionData.getNote(), savingsAccountTransactionData.getLienTransaction())
+                .setAgentCollection(savingsAccountTransactionData.agentCollection).setOfficeId(savingsAccountTransactionData.officeId);
     }
 
     private static SavingsAccountTransactionData createImport(final SavingsAccountTransactionEnumData transactionType,
@@ -734,5 +738,15 @@ public class SavingsAccountTransactionData implements Serializable {
 
     public void setAccountDebit(Long accountDebit) {
         this.accountDebit = accountDebit;
+    }
+
+    public SavingsAccountTransactionData setAgentCollection(Object agentCollection) {
+        this.agentCollection = agentCollection;
+        return this;
+    }
+
+    public SavingsAccountTransactionData setOfficeId(Long officeId) {
+        this.officeId = officeId;
+        return this;
     }
 }

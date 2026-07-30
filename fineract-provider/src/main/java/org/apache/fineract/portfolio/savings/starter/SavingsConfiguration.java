@@ -39,6 +39,7 @@ import org.apache.fineract.infrastructure.entityaccess.service.FineractEntityAcc
 import org.apache.fineract.infrastructure.event.business.service.BusinessEventNotifierService;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
+import org.apache.fineract.organisation.agentcollection.service.AgentCollectionWritePlatformService;
 import org.apache.fineract.organisation.holiday.domain.HolidayRepositoryWrapper;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrencyRepositoryWrapper;
 import org.apache.fineract.organisation.staff.domain.StaffRepositoryWrapper;
@@ -382,23 +383,23 @@ public class SavingsConfiguration {
     @Bean
     @ConditionalOnMissingBean(SavingsAccountWritePlatformService.class)
     public SavingsAccountWritePlatformService savingsAccountWritePlatformService(PlatformSecurityContext context,
-            SavingsAccountDataValidator fromApiJsonDeserializer, SavingsAccountRepositoryWrapper savingAccountRepositoryWrapper,
-            StaffRepositoryWrapper staffRepository, SavingsAccountTransactionRepository savingsAccountTransactionRepository,
-            SavingsAccountAssembler savingAccountAssembler, SavingsAccountTransactionDataValidator savingsAccountTransactionDataValidator,
-            SavingsAccountChargeDataValidator savingsAccountChargeDataValidator,
-            PaymentDetailWritePlatformService paymentDetailWritePlatformService,
-            JournalEntryWritePlatformService journalEntryWritePlatformService, SavingsAccountDomainService savingsAccountDomainService,
-            NoteRepository noteRepository, AccountTransfersReadPlatformService accountTransfersReadPlatformService,
-            AccountAssociationsReadPlatformService accountAssociationsReadPlatformService, ChargeRepositoryWrapper chargeRepository,
-            SavingsAccountChargeRepositoryWrapper savingsAccountChargeRepository, HolidayRepositoryWrapper holidayRepository,
-            WorkingDaysRepositoryWrapper workingDaysRepository, ConfigurationDomainService configurationDomainService,
-            DepositAccountOnHoldTransactionRepository depositAccountOnHoldTransactionRepository,
-            EntityDatatableChecksWritePlatformService entityDatatableChecksWritePlatformService, AppUserRepositoryWrapper appuserRepository,
-            StandingInstructionRepository standingInstructionRepository, BusinessEventNotifierService businessEventNotifierService,
-            GSIMRepositoy gsimRepository, SavingsAccountInterestPostingService savingsAccountInterestPostingService,
-            SavingsAccountPostInterestService savingsAccountPostInterestService,
-            SavingsAccountActivationService savingsAccountActivationService, ExternalIdFactory externalIdFactory,
-            ErrorHandler errorHandler) {
+                                                                                 SavingsAccountDataValidator fromApiJsonDeserializer, SavingsAccountRepositoryWrapper savingAccountRepositoryWrapper,
+                                                                                 StaffRepositoryWrapper staffRepository, SavingsAccountTransactionRepository savingsAccountTransactionRepository,
+                                                                                 SavingsAccountAssembler savingAccountAssembler, SavingsAccountTransactionDataValidator savingsAccountTransactionDataValidator,
+                                                                                 SavingsAccountChargeDataValidator savingsAccountChargeDataValidator,
+                                                                                 PaymentDetailWritePlatformService paymentDetailWritePlatformService,
+                                                                                 JournalEntryWritePlatformService journalEntryWritePlatformService, SavingsAccountDomainService savingsAccountDomainService,
+                                                                                 NoteRepository noteRepository, AccountTransfersReadPlatformService accountTransfersReadPlatformService,
+                                                                                 AccountAssociationsReadPlatformService accountAssociationsReadPlatformService, ChargeRepositoryWrapper chargeRepository,
+                                                                                 SavingsAccountChargeRepositoryWrapper savingsAccountChargeRepository, HolidayRepositoryWrapper holidayRepository,
+                                                                                 WorkingDaysRepositoryWrapper workingDaysRepository, ConfigurationDomainService configurationDomainService,
+                                                                                 DepositAccountOnHoldTransactionRepository depositAccountOnHoldTransactionRepository,
+                                                                                 EntityDatatableChecksWritePlatformService entityDatatableChecksWritePlatformService, AppUserRepositoryWrapper appuserRepository,
+                                                                                 StandingInstructionRepository standingInstructionRepository, BusinessEventNotifierService businessEventNotifierService,
+                                                                                 GSIMRepositoy gsimRepository, SavingsAccountInterestPostingService savingsAccountInterestPostingService,
+                                                                                 SavingsAccountPostInterestService savingsAccountPostInterestService,
+                                                                                 SavingsAccountActivationService savingsAccountActivationService, ExternalIdFactory externalIdFactory,
+                                                                                 ErrorHandler errorHandler, AgentCollectionWritePlatformService agentCollectionWritePlatformService) {
         return new SavingsAccountWritePlatformServiceJpaRepositoryImpl(context, fromApiJsonDeserializer, savingAccountRepositoryWrapper,
                 staffRepository, savingsAccountTransactionRepository, savingAccountAssembler, savingsAccountTransactionDataValidator,
                 savingsAccountChargeDataValidator, paymentDetailWritePlatformService, journalEntryWritePlatformService,
@@ -406,7 +407,7 @@ public class SavingsConfiguration {
                 chargeRepository, savingsAccountChargeRepository, holidayRepository, workingDaysRepository, configurationDomainService,
                 depositAccountOnHoldTransactionRepository, entityDatatableChecksWritePlatformService, appuserRepository,
                 standingInstructionRepository, businessEventNotifierService, gsimRepository, savingsAccountInterestPostingService,
-                savingsAccountPostInterestService, savingsAccountActivationService, externalIdFactory, errorHandler);
+                savingsAccountPostInterestService, savingsAccountActivationService, externalIdFactory, errorHandler,agentCollectionWritePlatformService);
     }
 
     @Bean

@@ -18,26 +18,8 @@
  */
 package org.apache.fineract.portfolio.loanaccount.service;
 
-import static java.lang.Boolean.TRUE;
-import static org.apache.fineract.portfolio.loanproduct.service.LoanEnumerations.interestType;
-
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -51,15 +33,11 @@ import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
-import org.apache.fineract.infrastructure.core.service.DateUtils;
-import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
-import org.apache.fineract.infrastructure.core.service.MathUtil;
-import org.apache.fineract.infrastructure.core.service.Page;
-import org.apache.fineract.infrastructure.core.service.PaginationHelper;
-import org.apache.fineract.infrastructure.core.service.SearchParameters;
+import org.apache.fineract.infrastructure.core.service.*;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
+import org.apache.fineract.organisation.agentcollection.service.AgentCollectionTemplateService;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrency;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrencyRepositoryWrapper;
@@ -96,40 +74,8 @@ import org.apache.fineract.portfolio.group.data.GroupRoleData;
 import org.apache.fineract.portfolio.group.service.GroupReadPlatformService;
 import org.apache.fineract.portfolio.loanaccount.api.LoanApiConstants;
 import org.apache.fineract.portfolio.loanaccount.api.LoanTransactionApiConstants;
-import org.apache.fineract.portfolio.loanaccount.data.DisbursementData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanAccountData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanApplicationTimelineData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanApprovalData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanChargePaidByData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanInterestRecalculationData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanRepaymentScheduleInstallmentData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanStatusEnumData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanSummaryData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionEnumData;
-import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionRelationData;
-import org.apache.fineract.portfolio.loanaccount.data.OutstandingAmountsDTO;
-import org.apache.fineract.portfolio.loanaccount.data.PaidInAdvanceData;
-import org.apache.fineract.portfolio.loanaccount.data.RepaymentScheduleRelatedLoanData;
-import org.apache.fineract.portfolio.loanaccount.data.ScheduleGeneratorDTO;
-import org.apache.fineract.portfolio.loanaccount.domain.Loan;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanBuyDownFeeBalance;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanBuyDownFeeCalculationType;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanBuyDownFeeIncomeType;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanBuyDownFeeStrategy;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanCapitalizedIncomeBalance;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanCapitalizedIncomeCalculationType;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanCapitalizedIncomeStrategy;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanCapitalizedIncomeType;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanChargeOffBehaviour;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanRepositoryWrapper;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanSubStatus;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRepaymentPeriodData;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRepository;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
+import org.apache.fineract.portfolio.loanaccount.data.*;
+import org.apache.fineract.portfolio.loanaccount.domain.*;
 import org.apache.fineract.portfolio.loanaccount.domain.reaging.LoanReAgeInterestHandlingType;
 import org.apache.fineract.portfolio.loanaccount.domain.reamortization.LoanReAmortizationInterestHandlingType;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanNotFoundException;
@@ -160,6 +106,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.lang.Boolean.TRUE;
+import static org.apache.fineract.portfolio.loanproduct.service.LoanEnumerations.interestType;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -200,6 +156,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
     private final InterestRefundServiceDelegate interestRefundServiceDelegate;
     private final LoanMaximumAmountCalculator loanMaximumAmountCalculator;
     private final LoanRepaymentScheduleService loanRepaymentScheduleService;
+    private final AgentCollectionTemplateService agentCollectionTemplateService;
 
     @Override
     public LoanAccountData retrieveOne(final Long loanId) {
@@ -549,7 +506,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
         LoanTransactionData loanTransactionData = this.jdbcTemplate.queryForObject("select " + mapper.schema(), mapper, // NOSONAR
                 LoanTransactionType.REPAYMENT.getValue(), LoanTransactionType.DOWN_PAYMENT.getValue(), loanId);
         final Collection<PaymentTypeData> paymentOptions = this.paymentTypeReadPlatformService.retrieveAllPaymentTypes();
-        return LoanTransactionData.templateOnTop(loanTransactionData, paymentOptions);
+        return this.agentCollectionTemplateService.getLoanRepaymentTemplateData(loanTransactionData,paymentOptions)
+                .orElseGet( ()-> LoanTransactionData.templateOnTop(loanTransactionData, paymentOptions));
     }
 
     @Override
@@ -2140,13 +2098,15 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
                     + " - coalesce(ls.penalty_charges_waived_derived, 0)";
             final String totalDueExpression = principalDueExpression + " + " + interestDueExpression + " + " + feeDueExpression + " + "
                     + penaltyDueExpression;
-            return " GREATEST(loan_transaction.transaction_date, ls.dueDate) as transactionDate," + " " + principalDueExpression
+            return " l.id as loanId, coalesce(c.office_id, g.office_id) as officeId,"
+                    + " GREATEST(loan_transaction.transaction_date, ls.dueDate) as transactionDate," + " " + principalDueExpression
                     + " as principalDue," + " " + interestDueExpression + " as interestDue," + " " + feeDueExpression + " as feeDue," + " "
                     + penaltyDueExpression + " as penaltyDue," + " l.currency_code as currencyCode,"
                     + " l.currency_digits as currencyDigits," + " l.currency_multiplesof as inMultiplesOf,"
                     + " l.net_disbursal_amount as netDisbursalAmount," + " rc." + sqlGenerator.escape("name") + " as currencyName,"
                     + " rc.display_symbol as currencyDisplaySymbol," + " rc.internationalized_name_code as currencyNameCode" + " FROM"
                     + " m_loan l" + " JOIN m_currency rc on rc." + sqlGenerator.escape("code") + " = l.currency_code"
+                    + " left join m_client c on c.id = l.client_id" + " left join m_group g on g.id = l.group_id"
                     + " JOIN m_loan_repayment_schedule ls ON ls.loan_id = l.id" + " LEFT JOIN ("
                     + " select tr.loan_id, max(tr.transaction_date) as transaction_date" + " from m_loan_transaction tr"
                     + " where tr.transaction_type_enum in (?,?)" + " AND tr.is_reversed = false" + " group by tr.loan_id"
@@ -2169,8 +2129,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
             final BigDecimal overPaymentPortion = null;
             final BigDecimal netDisbursalAmount = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "netDisbursalAmount");
             final Long id = null;
-            final Long loanId = null;
-            final Long officeId = null;
+            final Long loanId = JdbcSupport.getLong(rs, "loanId");
+            final Long officeId = JdbcSupport.getLong(rs, "officeId");
             final String officeName = null;
             boolean manuallyReversed = false;
             final PaymentDetailData paymentDetailData = null;
