@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="lead-architecture-001" author="fineract">
+        <createTable tableName="m_lead">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="external_id" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="office_id" type="BIGINT"/>
+            <column name="assigned_staff_id" type="BIGINT"/>
+            <column name="version" type="BIGINT"/>
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="last_modified_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_modified_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="lead-architecture-002" author="fineract">
+        <createTable tableName="m_lead_process_definition">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="name" type="VARCHAR(120)"><constraints nullable="false"/></column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="active" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="version" type="BIGINT"/>
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="last_modified_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_modified_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="lead-architecture-003" author="fineract">
+        <createTable tableName="m_lead_process_definition_version">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="process_definition_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="version_number" type="INT"><constraints nullable="false"/></column>
+            <column name="published" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="published_on_utc" type="datetime"/>
+            <column name="lock_version" type="BIGINT"/>
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="last_modified_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_modified_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="m_lead_process_definition_version"
+                             columnNames="process_definition_id, version_number"
+                             constraintName="uk_lead_process_def_version"/>
+    </changeSet>
+
+    <changeSet id="lead-architecture-004" author="fineract">
+        <createTable tableName="m_lead_process_stage_config">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="definition_version_id" type="BIGINT"/>
+            <column name="stage_code" type="VARCHAR(100)"><constraints nullable="false"/></column>
+            <column name="sequence_no" type="INT"><constraints nullable="false"/></column>
+            <column name="enabled" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="mandatory" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="skippable" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="maker_checker_required" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="auto_prefill" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="manual_fallback" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="assigned_role_id" type="BIGINT"/>
+            <column name="sla_hours" type="INT"/>
+            <column name="required_datatables" type="VARCHAR(1000)"/>
+            <column name="document_requirements_json" type="VARCHAR(2000)"/>
+            <column name="options_json" type="VARCHAR(2000)"/>
+        </createTable>
+        <addUniqueConstraint tableName="m_lead_process_stage_config"
+                             columnNames="definition_version_id, stage_code"
+                             constraintName="uk_lead_stage_config_code"/>
+    </changeSet>
+
+    <changeSet id="lead-architecture-005" author="fineract">
+        <createTable tableName="m_lead_process_instance">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="lead_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="definition_version_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="definition_version_number" type="INT"><constraints nullable="false"/></column>
+            <column name="status" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="version" type="BIGINT"/>
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="last_modified_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_modified_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="lead-architecture-006" author="fineract">
+        <createTable tableName="m_lead_stage_instance">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="process_instance_id" type="BIGINT"/>
+            <column name="stage_code" type="VARCHAR(100)"><constraints nullable="false"/></column>
+            <column name="sequence_no" type="INT"><constraints nullable="false"/></column>
+            <column name="mandatory" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="skippable" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="status" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="submission_revision" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="pending_check_revision" type="BIGINT"/>
+            <column name="version" type="BIGINT"/>
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="last_modified_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_modified_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="lead-architecture-007" author="fineract">
+        <createTable tableName="m_lead_stage_submission">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="stage_instance_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="maker_user_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="revision" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="status" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="submitted_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="lead-architecture-008" author="fineract">
+        <createTable tableName="m_lead_stage_check">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="submission_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="checker_user_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="revision" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="decision" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="checked_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="remarks" type="VARCHAR(500)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="lead-architecture-009" author="fineract">
+        <createTable tableName="m_lead_stage_external_execution">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="stage_instance_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="stage_code" type="VARCHAR(100)"><constraints nullable="false"/></column>
+            <column name="idempotency_key" type="VARCHAR(150)"><constraints nullable="false"/></column>
+            <column name="provider_reference" type="VARCHAR(150)"/>
+            <column name="status" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="error_code" type="VARCHAR(150)"/>
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="last_modified_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_modified_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="m_lead_stage_external_execution"
+                             columnNames="stage_instance_id, idempotency_key"
+                             constraintName="uk_lead_stage_external_idempotency"/>
+    </changeSet>
+
+    <changeSet id="lead-architecture-010" author="fineract">
+        <createTable tableName="m_lead_stage_action_history">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="stage_instance_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="action_name" type="VARCHAR(40)"><constraints nullable="false"/></column>
+            <column name="actor_user_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="remarks" type="VARCHAR(500)"/>
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="last_modified_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_modified_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="lead-architecture-011" author="fineract">
+        <createTable tableName="m_lead_stage_document_link">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="stage_instance_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="document_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="requirement_category" type="VARCHAR(100)"/>
+            <column name="verification_status" type="VARCHAR(30)"><constraints nullable="false"/></column>
+            <column name="verified_by_user_id" type="BIGINT"/>
+            <column name="verified_on_utc" type="datetime"/>
+            <column name="remarks" type="VARCHAR(500)"/>
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_on_utc" type="datetime"><constraints nullable="false"/></column>
+            <column name="last_modified_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="last_modified_on_utc" type="datetime"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
