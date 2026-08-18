@@ -16,12 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.client.domain.search;
+package org.apache.fineract.organisation.agentcollection.data;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
-public interface SearchingClientRepository {
+@Value
+@Builder
+public class AgentSettlementCommand {
 
-    Page<SearchedClient> searchByText(String searchText, Pageable pageable, String officeHierarchy,Long staffId);
+    Long agentId;
+    List<Long> transactionIds;
+    LocalDate settlementDate;
+    BigDecimal submittedAmount;
+    String referenceNumber;
+    String notes;
+    String rejectionReason;
 }

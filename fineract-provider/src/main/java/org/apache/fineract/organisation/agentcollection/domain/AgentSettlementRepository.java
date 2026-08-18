@@ -19,8 +19,6 @@
 package org.apache.fineract.organisation.agentcollection.domain;
 
 import jakarta.persistence.LockModeType;
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -28,24 +26,13 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface AgentCollectionTransactionRepository
-        extends JpaRepository<AgentCollectionTransaction, Long>, JpaSpecificationExecutor<AgentCollectionTransaction> {
-
-    boolean existsByLoanTransactionId(Long loanTransactionId);
-
-    boolean existsBySavingsTransactionId(Long savingsTransactionId);
+public interface AgentSettlementRepository extends JpaRepository<AgentSettlement, Long>, JpaSpecificationExecutor<AgentSettlement> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<AgentCollectionTransaction> findByLoanTransactionId(Long loanTransactionId);
+    @Query("select settlement from AgentSettlement settlement join fetch settlement.agent where settlement.id = :settlementId")
+    Optional<AgentSettlement> findByIdWithAgentLocked(@Param("settlementId") Long settlementId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<AgentCollectionTransaction> findBySavingsTransactionId(Long savingsTransactionId);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select transaction from AgentCollectionTransaction transaction join fetch transaction.agent where transaction.id in :transactionIds")
-    List<AgentCollectionTransaction> findAllByIdInLocked(@Param("transactionIds") Collection<Long> transactionIds);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select transaction from AgentCollectionTransaction transaction join fetch transaction.agent where transaction.settlementId = :settlementId")
-    List<AgentCollectionTransaction> findAllBySettlementIdLocked(@Param("settlementId") Long settlementId);
+    @Query("select settlement from AgentSettlement settlement join fetch settlement.agent join fetch agent.office where settlement.id = :settlementId")
+    Optional<AgentSettlement> findByIdWithAgentAndOfficeLocked(@Param("settlementId") Long settlementId);
 }

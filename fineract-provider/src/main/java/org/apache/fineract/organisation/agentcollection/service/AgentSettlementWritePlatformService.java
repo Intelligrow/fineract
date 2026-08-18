@@ -16,12 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.client.domain.search;
+package org.apache.fineract.organisation.agentcollection.service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.organisation.agentcollection.data.AgentSettlementCommand;
 
-public interface SearchingClientRepository {
+public interface AgentSettlementWritePlatformService {
 
-    Page<SearchedClient> searchByText(String searchText, Pageable pageable, String officeHierarchy,Long staffId);
+    CommandProcessingResult createDraftSettlement(AgentSettlementCommand command);
+
+    CommandProcessingResult submitSettlement(Long settlementId);
+
+    CommandProcessingResult approveSettlement(Long settlementId, JsonCommand command);
+
+    CommandProcessingResult rejectSettlement(Long settlementId, String rejectionReason);
+
+    CommandProcessingResult cancelDraftSettlement(Long settlementId);
 }

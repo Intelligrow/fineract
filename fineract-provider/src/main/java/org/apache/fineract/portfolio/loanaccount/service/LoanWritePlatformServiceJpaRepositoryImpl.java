@@ -108,7 +108,6 @@ import org.apache.fineract.infrastructure.event.business.domain.loan.transaction
 import org.apache.fineract.infrastructure.event.business.service.BusinessEventNotifierService;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.organisation.agentcollection.service.AgentCollectionWritePlatformService;
-import org.apache.fineract.organisation.agentcollection.service.AgentCollectionWritePlatformServiceJpaRepositoryImpl;
 import org.apache.fineract.organisation.holiday.domain.Holiday;
 import org.apache.fineract.organisation.holiday.domain.HolidayRepositoryWrapper;
 import org.apache.fineract.organisation.holiday.service.HolidayUtil;
@@ -1148,8 +1147,9 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 holidayDetailDto, isHolidayValidationDone);
         loan = loanTransaction.getLoan();
         this.loanAccountDomainService.updateAndSaveLoanCollateralTransactionsForIndividualAccounts(loan, loanTransaction);
-
-        this.agentCollectionWritePlatformService.recordLoanRepaymentCollection(loanTransaction);
+        if (loanTransaction.isRepayment()) {
+            this.agentCollectionWritePlatformService.recordLoanRepaymentCollection(loanTransaction);
+        }
         return new CommandProcessingResultBuilder() //
                 .withCommandId(command.commandId()) //
                 .withLoanId(loan.getId()) //
@@ -1288,7 +1288,12 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 .paymentDetail(paymentDetail).transactionDate(transactionDate).txnExternalId(txnExternalId)
                 .reversalTxnExternalId(reversalTxnExternalId).noteText(noteText).build();
 
-        return loanAdjustmentService.adjustLoanTransaction(loan, transactionToAdjust, parameter, commandId, changes);
+        CommandProcessingResult result = loanAdjustmentService.adjustLoanTransaction(loan, transactionToAdjust, parameter, commandId,
+                changes);
+        if (!isAdjustCommand && transactionToAdjust.getTypeOf().equals(LoanTransactionType.REPAYMENT)) {
+            this.agentCollectionWritePlatformService.markLoanRepaymentCollectionReversed(transactionId);
+        }
+        return result;
     }
 
     @Transactional

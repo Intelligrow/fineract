@@ -21,10 +21,17 @@ package org.apache.fineract.organisation.agentcollection.service;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.organisation.agentcollection.data.AgentData;
+import org.apache.fineract.organisation.agentcollection.data.AgentTemplateData;
+
+import java.util.Optional;
 
 public interface AgentReadPlatformService {
 
     AgentData retrieveAgent(Long agentId);
 
+    Optional<Long> retrieveLoggedInUserAgentId();
+
     Page<AgentData> retrieveAllAgents(SearchParameters searchParameters);
+
+    AgentTemplateData retrieveTemplate(String associations);
 }

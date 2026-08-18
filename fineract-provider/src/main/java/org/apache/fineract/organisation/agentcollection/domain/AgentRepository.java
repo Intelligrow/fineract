@@ -32,7 +32,7 @@ public interface AgentRepository extends JpaRepository<Agent, Long>, JpaSpecific
     Optional<Agent> findByIdWithLimits(@Param("agentId") Long agentId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select distinct agent from Agent agent left join fetch agent.transactionLimits where agent.id = :agentId")
+    @Query("select agent from Agent agent where agent.id = :agentId")
     Optional<Agent> findByIdWithLimitsLocked(@Param("agentId") Long agentId);
 
     @Query("""
@@ -42,13 +42,19 @@ public interface AgentRepository extends JpaRepository<Agent, Long>, JpaSpecific
             """)
     Optional<Agent> findActiveAgentByAppUserId(@Param("appUserId") Long appUserId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select distinct agent from Agent agent
             left join fetch agent.transactionLimits
-            where agent.appUser.id = :appUserId and agent.status = 300
+            where agent.appUser.id = :appUserId
             """)
-    Optional<Agent> findActiveAgentByAppUserIdLocked(@Param("appUserId") Long appUserId);
+    Optional<Agent> findAgentByAppUserId(@Param("appUserId") Long appUserId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select agent from Agent agent
+            where agent.appUser.id = :appUserId
+            """)
+    Optional<Agent> findAgentByAppUserIdLocked(@Param("appUserId") Long appUserId);
 
     boolean existsByAppUser_Id(Long appUserId);
 

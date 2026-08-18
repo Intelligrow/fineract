@@ -84,6 +84,7 @@ import org.apache.fineract.investor.domain.ExternalAssetOwnerRepository;
 import org.apache.fineract.investor.domain.ExternalAssetOwnerTransfer;
 import org.apache.fineract.investor.exception.ExternalAssetOwnerNotFoundException;
 import org.apache.fineract.investor.service.AccountingService;
+import org.apache.fineract.organisation.agentcollection.domain.Agent;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.organisation.monetary.domain.OrganisationCurrencyRepositoryWrapper;
@@ -1024,6 +1025,38 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         transactionDTO.setLoanToLoanTransfer(false);
 
         return transactionDTO;
+    }
+
+
+    @Override
+    @Transactional
+    public void createJournalEntryForAgentSettlements(Agent agent, BigDecimal amount, Long creditAccountId){
+        String name = agent.getPaymentType().getName();
+        final GLAccount debitGlAccount = this.glAccountRepository.findOneByName(agent.getPaymentType().getName())
+                .orElseThrow(() -> new GLAccountNotFoundException(name));
+        final GLAccount creditGlAccount = this.glAccountRepository.findById(creditAccountId)
+                .orElseThrow(() -> new GLAccountNotFoundException(creditAccountId));
+
+        if(debitGlAccount.isDisabled()) {
+            throw new JournalEntryInvalidException(GlJournalEntryInvalidReason.GL_ACCOUNT_DISABLED, null,
+                    debitGlAccount.getName(), debitGlAccount.getGlCode());
+        }else if(creditGlAccount.isDisabled()) {
+            throw new JournalEntryInvalidException(GlJournalEntryInvalidReason.GL_ACCOUNT_DISABLED, null,
+                    creditGlAccount.getName(), creditGlAccount.getGlCode());
+        }
+        Office office = agent.getOffice();
+        final String transactionId = generateTransactionId(office.getId());
+
+        final JournalEntry debitGlJournalEntry = JournalEntry.createNew(office, null, debitGlAccount, agent.getCurrencyCode(),
+                transactionId, false,  DateUtils.getBusinessLocalDate(), JournalEntryType.DEBIT,amount, "", null,
+                null, null, null, null, null, null);
+        helper.persistJournalEntry(debitGlJournalEntry);
+
+        final JournalEntry creditGlJournalEntry = JournalEntry.createNew(office, null, debitGlAccount, agent.getCurrencyCode(),
+                transactionId, false,  DateUtils.getBusinessLocalDate(), JournalEntryType.CREDIT,amount, "", null,
+                null, null, null, null, null, null);
+        helper.persistJournalEntry(creditGlJournalEntry);
+
     }
 
     private static class OfficeCurrencyKey {

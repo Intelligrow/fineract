@@ -25,4 +25,8 @@ public class AgentNotFoundException extends AbstractPlatformResourceNotFoundExce
     public AgentNotFoundException(final Long id) {
         super("error.msg.agent.id.invalid", "Agent with ID " + id + " does not exist", id);
     }
+
+    public AgentNotFoundException(final Long id, final Throwable cause) {
+        super("error.msg.agent.id.invalid", "Agent with ID " + id + " does not exist", id, cause);
+    }
 }

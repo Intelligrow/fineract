@@ -31,6 +31,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.accounting.common.AccountingRuleType;
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
@@ -45,6 +47,8 @@ import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
+import org.apache.fineract.organisation.agentcollection.domain.Agent;
+import org.apache.fineract.organisation.agentcollection.domain.AgentRepositoryWrapper;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.account.data.AccountTransferData;
 import org.apache.fineract.portfolio.client.data.ClientData;
@@ -108,11 +112,12 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
     private final SavingsAccountRepositoryWrapper savingsAccountRepositoryWrapper;
     private final SavingsAccountTransactionRepository savingsAccountTransactionRepository;
+    private final AgentRepositoryWrapper agentRepository;
 
     public SavingsAccountReadPlatformServiceImpl(final PlatformSecurityContext context, final JdbcTemplate jdbcTemplate,
             final SavingsAccountAssembler savingAccountAssembler, PaginationHelper paginationHelper, ColumnValidator columnValidator,
             DatabaseSpecificSQLGenerator sqlGenerator, SavingsAccountRepositoryWrapper savingsAccountRepositoryWrapper,
-            SavingsAccountTransactionRepository savingsAccountTransactionRepository) {
+            SavingsAccountTransactionRepository savingsAccountTransactionRepository,AgentRepositoryWrapper agentRepository) {
         this.context = context;
         this.jdbcTemplate = jdbcTemplate;
         this.sqlGenerator = sqlGenerator;
@@ -126,6 +131,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         this.paginationHelper = paginationHelper;
         this.savingAccountMapperForInterestPosting = new SavingAccountMapperForInterestPosting();
         this.savingAccountAssembler = savingAccountAssembler;
+        this.agentRepository = agentRepository;
     }
 
     @Override
@@ -217,9 +223,15 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
     @Override
     public SavingsAccountData retrieveOne(final Long accountId) {
+        AppUser appUser = this.context.authenticatedUser();
+        Optional<Agent> agent = agentRepository.findAgentByAppUserIdWithStatusCheck(appUser.getId());
+        String agentSqlCondition = agentRepository.findAgentByAppUserIdWithStatusCheck(appUser.getId())
+                .map(activeAgent -> " and sa.field_officer_id = " + activeAgent.getStaff().getId())
+                .orElse("");
 
         try {
-            final String sql = "select " + this.savingAccountMapper.schema() + " where sa.id = ?";
+            final String sql = "select " + this.savingAccountMapper.schema() + " where sa.id = ?" + agentSqlCondition;
+
 
             return this.jdbcTemplate.queryForObject(sql, this.savingAccountMapper, new Object[] { accountId }); // NOSONAR
         } catch (final EmptyResultDataAccessException e) {
@@ -1242,6 +1254,8 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("sa.min_required_opening_balance as minRequiredOpeningBalance ");
             sqlBuilder.append("from m_savings_account sa ");
             sqlBuilder.append("join m_currency curr on curr.code = sa.currency_code ");
+            sqlBuilder.append("left join m_group as g on g.id = sa.group_id ");
+            sqlBuilder.append("left join m_client as c on c.id = sa.client_id ");
 
             this.schemaSql = sqlBuilder.toString();
         }
@@ -1266,7 +1280,8 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMultiplesOf, currencyDisplaySymbol,
                     currencyNameCode);
 
-            return SavingsAccountTransactionData.template(savingsId, accountNo, DateUtils.getBusinessLocalDate(), currency).setOfficeId(officeId);
+            return SavingsAccountTransactionData.template(savingsId, accountNo, DateUtils.getBusinessLocalDate(), currency)
+                    .setOfficeId(officeId);
         }
     }
 

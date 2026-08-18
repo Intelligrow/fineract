@@ -20,6 +20,10 @@ package org.apache.fineract.organisation.agentcollection.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.apache.fineract.infrastructure.core.service.Page;
+import org.apache.fineract.organisation.agentcollection.data.AgentCollectionSearchParameters;
+import org.apache.fineract.organisation.agentcollection.data.AgentCollectionSummaryData;
+import org.apache.fineract.organisation.agentcollection.data.AgentCollectionTransactionData;
 import org.apache.fineract.organisation.agentcollection.domain.AgentTransactionType;
 
 public interface AgentCollectionReadPlatformService {
@@ -29,4 +33,10 @@ public interface AgentCollectionReadPlatformService {
     BigDecimal retrieveDailyCollectionTotal(Long agentId, LocalDate businessDate);
 
     BigDecimal retrieveDailyCollectionTotal(Long agentId, AgentTransactionType transactionType, LocalDate businessDate);
+
+    AgentCollectionSummaryData retrieveAgentSummary(Long agentId, LocalDate businessDate);
+
+    Page<AgentCollectionTransactionData> retrieveCollections(AgentCollectionSearchParameters searchParameters);
+
+    Page<AgentCollectionTransactionData> retrieveStatement(AgentCollectionSearchParameters searchParameters);
 }

@@ -18,12 +18,14 @@
  */
 package org.apache.fineract.organisation.agentcollection.starter;
 
+import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
 import org.apache.fineract.infrastructure.core.service.PaginationHelper;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.service.SqlValidator;
 import org.apache.fineract.organisation.agentcollection.domain.AgentCollectionTransactionRepository;
 import org.apache.fineract.organisation.agentcollection.domain.AgentRepositoryWrapper;
+import org.apache.fineract.organisation.agentcollection.domain.AgentSettlementRepository;
 import org.apache.fineract.organisation.agentcollection.serialization.AgentCommandFromApiJsonDeserializer;
 import org.apache.fineract.organisation.agentcollection.service.AgentCollectionReadPlatformService;
 import org.apache.fineract.organisation.agentcollection.service.AgentCollectionReadPlatformServiceImpl;
@@ -35,14 +37,23 @@ import org.apache.fineract.organisation.agentcollection.service.AgentCollectionW
 import org.apache.fineract.organisation.agentcollection.service.AgentCollectionWritePlatformServiceJpaRepositoryImpl;
 import org.apache.fineract.organisation.agentcollection.service.AgentReadPlatformService;
 import org.apache.fineract.organisation.agentcollection.service.AgentReadPlatformServiceImpl;
+import org.apache.fineract.organisation.agentcollection.service.AgentSettlementReadPlatformService;
+import org.apache.fineract.organisation.agentcollection.service.AgentSettlementReadPlatformServiceImpl;
+import org.apache.fineract.organisation.agentcollection.service.AgentSettlementValidationService;
+import org.apache.fineract.organisation.agentcollection.service.AgentSettlementValidationServiceImpl;
+import org.apache.fineract.organisation.agentcollection.service.AgentSettlementWritePlatformService;
+import org.apache.fineract.organisation.agentcollection.service.AgentSettlementWritePlatformServiceJpaRepositoryImpl;
 import org.apache.fineract.organisation.agentcollection.service.AgentValidationService;
 import org.apache.fineract.organisation.agentcollection.service.AgentValidationServiceImpl;
 import org.apache.fineract.organisation.agentcollection.service.AgentWritePlatformService;
 import org.apache.fineract.organisation.agentcollection.service.AgentWritePlatformServiceJpaRepositoryImpl;
 import org.apache.fineract.organisation.monetary.service.CurrencyReadPlatformService;
 import org.apache.fineract.organisation.office.domain.OfficeRepositoryWrapper;
+import org.apache.fineract.organisation.office.service.OfficeReadPlatformService;
 import org.apache.fineract.organisation.staff.domain.StaffRepositoryWrapper;
+import org.apache.fineract.organisation.staff.service.StaffReadService;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepository;
+import org.apache.fineract.portfolio.paymenttype.service.PaymentTypeReadService;
 import org.apache.fineract.useradministration.domain.AppUserRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -55,8 +66,11 @@ public class OrganisationAgentCollectionConfiguration {
     @Bean
     @ConditionalOnMissingBean(AgentReadPlatformService.class)
     public AgentReadPlatformService agentReadPlatformService(final JdbcTemplate jdbcTemplate, final PlatformSecurityContext context,
-            final PaginationHelper paginationHelper, final DatabaseSpecificSQLGenerator sqlGenerator, final SqlValidator sqlValidator) {
-        return new AgentReadPlatformServiceImpl(jdbcTemplate, context, paginationHelper, sqlGenerator, sqlValidator);
+            final PaginationHelper paginationHelper, final DatabaseSpecificSQLGenerator sqlGenerator, final SqlValidator sqlValidator,
+            final OfficeReadPlatformService officeReadPlatformService, final StaffReadService staffReadService,
+            final CurrencyReadPlatformService currencyReadPlatformService, final PaymentTypeReadService paymentTypeReadService) {
+        return new AgentReadPlatformServiceImpl(jdbcTemplate, context, paginationHelper, sqlGenerator, sqlValidator,
+                officeReadPlatformService, staffReadService, currencyReadPlatformService, paymentTypeReadService);
     }
 
     @Bean
@@ -68,8 +82,11 @@ public class OrganisationAgentCollectionConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(AgentCollectionReadPlatformService.class)
-    public AgentCollectionReadPlatformService agentCollectionReadPlatformService(final JdbcTemplate jdbcTemplate) {
-        return new AgentCollectionReadPlatformServiceImpl(jdbcTemplate);
+    public AgentCollectionReadPlatformService agentCollectionReadPlatformService(final JdbcTemplate jdbcTemplate,
+            final PlatformSecurityContext context, final AgentReadPlatformService agentReadPlatformService,
+            final PaginationHelper paginationHelper, final DatabaseSpecificSQLGenerator sqlGenerator, final SqlValidator sqlValidator) {
+        return new AgentCollectionReadPlatformServiceImpl(jdbcTemplate, context, agentReadPlatformService, paginationHelper, sqlGenerator,
+                sqlValidator);
     }
 
     @Bean
@@ -96,6 +113,31 @@ public class OrganisationAgentCollectionConfiguration {
             final AgentCollectionTransactionRepository agentCollectionTransactionRepository) {
         return new AgentCollectionWritePlatformServiceJpaRepositoryImpl(agentValidationService, agentCollectionTransactionValidationService,
                 agentCollectionTransactionRepository);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(AgentSettlementReadPlatformService.class)
+    public AgentSettlementReadPlatformService agentSettlementReadPlatformService(final JdbcTemplate jdbcTemplate,
+            final PlatformSecurityContext context, final AgentCollectionReadPlatformService agentCollectionReadPlatformService,
+            final PaginationHelper paginationHelper, final DatabaseSpecificSQLGenerator sqlGenerator, final SqlValidator sqlValidator) {
+        return new AgentSettlementReadPlatformServiceImpl(jdbcTemplate, context, agentCollectionReadPlatformService, paginationHelper,
+                sqlGenerator, sqlValidator);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(AgentSettlementValidationService.class)
+    public AgentSettlementValidationService agentSettlementValidationService(final AgentValidationService agentValidationService) {
+        return new AgentSettlementValidationServiceImpl(agentValidationService);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(AgentSettlementWritePlatformService.class)
+    public AgentSettlementWritePlatformService agentSettlementWritePlatformService(final PlatformSecurityContext context,
+            final AgentValidationService agentValidationService, final AgentSettlementValidationService agentSettlementValidationService,
+            final AgentSettlementRepository agentSettlementRepository,
+            final AgentCollectionTransactionRepository agentCollectionTransactionRepository, final JournalEntryWritePlatformService journalEntryWritePlatformService) {
+        return new AgentSettlementWritePlatformServiceJpaRepositoryImpl(context, agentValidationService, agentSettlementValidationService,
+                agentSettlementRepository, agentCollectionTransactionRepository,journalEntryWritePlatformService);
     }
 
     @Bean

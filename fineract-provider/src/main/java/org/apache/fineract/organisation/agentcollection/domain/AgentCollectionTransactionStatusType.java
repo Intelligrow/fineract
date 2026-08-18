@@ -20,15 +20,36 @@ package org.apache.fineract.organisation.agentcollection.domain;
 
 public enum AgentCollectionTransactionStatusType {
 
-    INVALID(0), PENDING(100), SETTLED(200), REVERSED(300), DISPUTED(400);
+    INVALID(0, "agentCollectionTransactionStatusType.invalid"), PENDING(100, "agentCollectionTransactionStatusType.pending"), SETTLED(200,
+            "agentCollectionTransactionStatusType.settled"), REVERSED(300,
+                    "agentCollectionTransactionStatusType.reversed"), DISPUTED(400, "agentCollectionTransactionStatusType.disputed");
 
     private final Integer value;
+    private final String code;
 
-    AgentCollectionTransactionStatusType(final Integer value) {
+    AgentCollectionTransactionStatusType(final Integer value, final String code) {
         this.value = value;
+        this.code = code;
+    }
+
+    public static AgentCollectionTransactionStatusType fromInt(final Integer value) {
+        if (value == null) {
+            return INVALID;
+        }
+        return switch (value) {
+            case 100 -> PENDING;
+            case 200 -> SETTLED;
+            case 300 -> REVERSED;
+            case 400 -> DISPUTED;
+            default -> INVALID;
+        };
     }
 
     public Integer getValue() {
         return value;
+    }
+
+    public String getCode() {
+        return code;
     }
 }

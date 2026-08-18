@@ -203,6 +203,26 @@ public class AgentCollectionTransaction extends AbstractAuditableWithUTCDateTime
         return Objects.equals(this.status, AgentCollectionTransactionStatusType.REVERSED.getValue());
     }
 
+    public boolean isLinkedToSettlement() {
+        return this.settlementId != null;
+    }
+
+    public void linkToSettlement(final Long settlementId) {
+        this.settlementId = settlementId;
+    }
+
+    public void releaseFromSettlement(final Long settlementId) {
+        if (Objects.equals(this.settlementId, settlementId) && isPending()) {
+            this.settlementId = null;
+        }
+    }
+
+    public void markAsSettled(final Long settlementId, final LocalDate settledDate) {
+        this.status = AgentCollectionTransactionStatusType.SETTLED.getValue();
+        this.settlementId = settlementId;
+        this.settledDate = settledDate;
+    }
+
     public void markAsReversed() {
         this.status = AgentCollectionTransactionStatusType.REVERSED.getValue();
     }

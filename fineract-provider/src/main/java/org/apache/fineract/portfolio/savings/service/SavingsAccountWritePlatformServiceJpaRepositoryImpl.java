@@ -852,6 +852,9 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
         account.activateAccountBasedOnBalance();
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
         postJournalEntries(account, existingTransactionIds, existingReversedTransactionIds, false);
+        if (savingsAccountTransaction.isDeposit()) {
+            this.agentCollectionWritePlatformService.markSavingsDepositCollectionReversed(transactionId);
+        }
         return new CommandProcessingResultBuilder() //
                 .withEntityId(savingsId) //
                 .withOfficeId(account.officeId()) //

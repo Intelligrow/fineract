@@ -19,6 +19,8 @@
 package org.apache.fineract.organisation.agentcollection.service;
 
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
+import org.apache.fineract.organisation.agentcollection.domain.AgentCollectionTransactionStatusType;
+import org.apache.fineract.organisation.agentcollection.domain.AgentSettlementStatusType;
 import org.apache.fineract.organisation.agentcollection.domain.AgentStatusType;
 import org.apache.fineract.organisation.agentcollection.domain.AgentTransactionType;
 
@@ -48,6 +50,37 @@ public final class AgentEnumerations {
             case SAVINGS_DEPOSIT -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Savings deposit");
             default ->
                 new EnumOptionData(AgentTransactionType.INVALID.getValue().longValue(), AgentTransactionType.INVALID.getCode(), "Invalid");
+        };
+    }
+
+    public static EnumOptionData collectionTransactionStatus(final Integer id) {
+        return collectionTransactionStatus(AgentCollectionTransactionStatusType.fromInt(id));
+    }
+
+    public static EnumOptionData collectionTransactionStatus(final AgentCollectionTransactionStatusType type) {
+        return switch (type) {
+            case PENDING -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Pending");
+            case SETTLED -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Settled");
+            case REVERSED -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Reversed");
+            case DISPUTED -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Disputed");
+            default -> new EnumOptionData(AgentCollectionTransactionStatusType.INVALID.getValue().longValue(),
+                    AgentCollectionTransactionStatusType.INVALID.getCode(), "Invalid");
+        };
+    }
+
+    public static EnumOptionData settlementStatus(final Integer id) {
+        return settlementStatus(AgentSettlementStatusType.fromInt(id));
+    }
+
+    public static EnumOptionData settlementStatus(final AgentSettlementStatusType type) {
+        return switch (type) {
+            case DRAFT -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Draft");
+            case SUBMITTED -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Submitted");
+            case APPROVED -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Approved");
+            case REJECTED -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Rejected");
+            case CANCELLED -> new EnumOptionData(type.getValue().longValue(), type.getCode(), "Cancelled");
+            default -> new EnumOptionData(AgentSettlementStatusType.INVALID.getValue().longValue(),
+                    AgentSettlementStatusType.INVALID.getCode(), "Invalid");
         };
     }
 }

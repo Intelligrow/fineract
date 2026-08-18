@@ -41,9 +41,6 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.commands.domain.CommandWrapper;
@@ -120,7 +117,7 @@ public class SavingsAccountTransactionsApiResource {
                 .retrieveDepositTransactionTemplate(resolvedSavingsId, DepositAccountType.SAVINGS_DEPOSIT);
         final Collection<PaymentTypeData> paymentTypeOptions = this.paymentTypeReadPlatformService.retrieveAllPaymentTypes();
 
-        SavingsAccountTransactionData templateDate =  this.agentCollectionTemplateService
+        SavingsAccountTransactionData templateDate = this.agentCollectionTemplateService
                 .getSavingsDepositTemplateData(savingsAccount, paymentTypeOptions)
                 .orElseGet(() -> SavingsAccountTransactionData.templateOnTop(savingsAccount, paymentTypeOptions));
 

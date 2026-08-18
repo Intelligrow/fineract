@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.client.domain.search;
+package org.apache.fineract.organisation.agentcollection.exception;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.apache.fineract.infrastructure.core.exception.AbstractPlatformResourceNotFoundException;
 
-public interface SearchingClientRepository {
+public class InActiveAgentException extends AbstractPlatformResourceNotFoundException {
 
-    Page<SearchedClient> searchByText(String searchText, Pageable pageable, String officeHierarchy,Long staffId);
+    public InActiveAgentException(final Long id) {
+        super("error.msg.agent.inactive", "Agent with ID " + id + " is not Active", id);
+    }
+
 }

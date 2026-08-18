@@ -50,7 +50,7 @@ public class AgentValidationServiceImpl implements AgentValidationService {
     @Override
     public Optional<Agent> findActiveAgentForAuthenticatedUserLocked() {
         final AppUser user = this.context.authenticatedUser();
-        return this.agentRepositoryWrapper.findActiveAgentByAppUserIdLocked(user.getId()).map(this::validateAgentIsActive);
+        return this.agentRepositoryWrapper.findAgentByAppUserIdLocked(user.getId()).map(this::validateAgentIsActive);
     }
 
     @Override

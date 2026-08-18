@@ -86,6 +86,11 @@ public class AgentCollectionTransactionValidationServiceImpl implements AgentCol
         this.agentValidationService.validateCurrency(agent, accountCurrencyCode);
 
         final AgentTransactionLimit transactionLimit = this.agentValidationService.retrieveEnabledTransactionLimit(agent, transactionType);
+        if(!transactionDate.equals(LocalDate.now())) {
+            throw new
+                    AgentConfigurationException("error.msg.agent.transaction.time.invalid",
+                    "Backdated transactions are not Allowed" + transactionDate);
+        }
         validateLimits(agent, transactionType, transactionLimit, amount, transactionDate);
     }
 
@@ -103,30 +108,101 @@ public class AgentCollectionTransactionValidationServiceImpl implements AgentCol
 
     private void validateLimits(final Agent agent, final AgentTransactionType transactionType, final AgentTransactionLimit transactionLimit,
             final BigDecimal amount, final LocalDate transactionDate) {
-        validateLimit("maximum.single.amount.exceeded", "Agent collection amount exceeds the maximum single transaction limit.", amount,
-                transactionLimit.getMaximumSingleAmount());
+        validateSingleTransactionLimit(transactionType, amount, transactionLimit.getMaximumSingleAmount());
 
         final LocalDate effectiveTransactionDate = transactionDate == null ? DateUtils.getBusinessLocalDate() : transactionDate;
         final BigDecimal dailyTransactionTotal = this.agentCollectionReadPlatformService.retrieveDailyCollectionTotal(agent.getId(),
                 transactionType, effectiveTransactionDate);
-        validateLimit("maximum.daily.transaction.amount.exceeded",
-                "Agent collection amount exceeds the remaining daily limit for this transaction type.", dailyTransactionTotal.add(amount),
-                transactionLimit.getMaximumDailyAmount());
+        validateDailyTransactionLimit(transactionType, dailyTransactionTotal, amount, transactionLimit.getMaximumDailyAmount());
 
         final BigDecimal dailyTotal = this.agentCollectionReadPlatformService.retrieveDailyCollectionTotal(agent.getId(),
                 effectiveTransactionDate);
-        validateLimit("maximum.daily.total.amount.exceeded", "Agent collection amount exceeds the remaining total daily collection limit.",
-                dailyTotal.add(amount), agent.getMaximumDailyTotalCollection());
+        validateDailyTotalLimit(dailyTotal, amount, agent.getMaximumDailyTotalCollection());
 
         final BigDecimal currentCashInHand = this.agentCollectionReadPlatformService.retrieveCurrentCashInHand(agent.getId());
-        validateLimit("maximum.cash.in.hand.amount.exceeded", "Agent collection amount exceeds the remaining cash-in-hand capacity.",
-                currentCashInHand.add(amount), agent.getMaximumCashInHand());
+        validateCashInHandLimit(currentCashInHand, amount, agent.getMaximumCashInHand());
     }
 
-    private void validateLimit(final String code, final String message, final BigDecimal projectedAmount, final BigDecimal maximumAmount) {
-        if (maximumAmount == null || projectedAmount.compareTo(maximumAmount) > 0) {
-            throw new AgentConfigurationException(code, message, projectedAmount, maximumAmount);
+    private void validateSingleTransactionLimit(final AgentTransactionType transactionType, final BigDecimal amount,
+            final BigDecimal maximumAmount) {
+        if (isLimitExceeded(amount, maximumAmount)) {
+            final String transactionLabel = transactionLabel(transactionType);
+            final String code = messageCodePrefix(transactionType) + ".maximum.single.amount.exceeded";
+            throw new AgentConfigurationException(code,
+                    sentenceCase(transactionLabel) + " collection cannot be completed. Maximum single " + transactionLabel
+                            + " limit reached. Attempted amount: " + amount + "; maximum allowed per transaction: " + maximumAmount
+                            + "; remaining balance: " + remainingBalance(BigDecimal.ZERO, maximumAmount) + ".",
+                    amount, maximumAmount, remainingBalance(BigDecimal.ZERO, maximumAmount));
         }
+    }
+
+    private void validateDailyTransactionLimit(final AgentTransactionType transactionType, final BigDecimal currentAmount,
+            final BigDecimal attemptedAmount, final BigDecimal maximumAmount) {
+        final BigDecimal projectedAmount = currentAmount.add(attemptedAmount);
+        if (isLimitExceeded(projectedAmount, maximumAmount)) {
+            final String transactionLabel = transactionLabel(transactionType);
+            final String code = messageCodePrefix(transactionType) + ".maximum.daily.amount.exceeded";
+            throw new AgentConfigurationException(code,
+                    sentenceCase(transactionLabel) + " collection cannot be completed. Daily " + transactionLabel
+                            + " limit reached. Attempted amount: " + attemptedAmount + "; already collected today: " + currentAmount
+                            + "; daily limit: " + maximumAmount + "; remaining balance: " + remainingBalance(currentAmount, maximumAmount)
+                            + ".",
+                    attemptedAmount, currentAmount, maximumAmount, remainingBalance(currentAmount, maximumAmount), projectedAmount);
+        }
+    }
+
+    private void validateDailyTotalLimit(final BigDecimal currentAmount, final BigDecimal attemptedAmount, final BigDecimal maximumAmount) {
+        final BigDecimal projectedAmount = currentAmount.add(attemptedAmount);
+        if (isLimitExceeded(projectedAmount, maximumAmount)) {
+            throw new AgentConfigurationException("maximum.daily.total.amount.exceeded",
+                    "Agent collection cannot be completed. Total daily collection limit reached. Attempted amount: " + attemptedAmount
+                            + "; already collected today: " + currentAmount + "; daily limit: " + maximumAmount + "; remaining balance: "
+                            + remainingBalance(currentAmount, maximumAmount) + ".",
+                    attemptedAmount, currentAmount, maximumAmount, remainingBalance(currentAmount, maximumAmount), projectedAmount);
+        }
+    }
+
+    private void validateCashInHandLimit(final BigDecimal currentAmount, final BigDecimal attemptedAmount, final BigDecimal maximumAmount) {
+        final BigDecimal projectedAmount = currentAmount.add(attemptedAmount);
+        if (isLimitExceeded(projectedAmount, maximumAmount)) {
+            throw new AgentConfigurationException("maximum.cash.in.hand.amount.exceeded",
+                    "Agent collection cannot be completed. Maximum cash-in-hand limit reached. Attempted amount: " + attemptedAmount
+                            + "; current cash in hand: " + currentAmount + "; maximum cash in hand: " + maximumAmount
+                            + "; remaining balance: " + remainingBalance(currentAmount, maximumAmount) + ".",
+                    attemptedAmount, currentAmount, maximumAmount, remainingBalance(currentAmount, maximumAmount), projectedAmount);
+        }
+    }
+
+    private boolean isLimitExceeded(final BigDecimal projectedAmount, final BigDecimal maximumAmount) {
+        return maximumAmount == null || projectedAmount.compareTo(maximumAmount) > 0;
+    }
+
+    private BigDecimal remainingBalance(final BigDecimal currentAmount, final BigDecimal maximumAmount) {
+        if (maximumAmount == null) {
+            return BigDecimal.ZERO;
+        }
+        final BigDecimal remainingAmount = maximumAmount.subtract(currentAmount);
+        return remainingAmount.signum() < 0 ? BigDecimal.ZERO : remainingAmount;
+    }
+
+    private String transactionLabel(final AgentTransactionType transactionType) {
+        return switch (transactionType) {
+            case LOAN_REPAYMENT -> "loan repayment";
+            case SAVINGS_DEPOSIT -> "savings deposit";
+            default -> "agent collection";
+        };
+    }
+
+    private String messageCodePrefix(final AgentTransactionType transactionType) {
+        return switch (transactionType) {
+            case LOAN_REPAYMENT -> "loan.repayment";
+            case SAVINGS_DEPOSIT -> "savings.deposit";
+            default -> "collection.transaction";
+        };
+    }
+
+    private String sentenceCase(final String value) {
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
     private void validateNoDuplicateLoanCollection(final Long loanTransactionId) {

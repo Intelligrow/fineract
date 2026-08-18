@@ -23,12 +23,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
+import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.service.SqlValidator;
+import org.apache.fineract.organisation.agentcollection.domain.Agent;
+import org.apache.fineract.organisation.agentcollection.domain.AgentRepositoryWrapper;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.organisation.office.data.OfficeData;
 import org.apache.fineract.organisation.office.service.OfficeReadPlatformService;
@@ -55,11 +60,13 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 @RequiredArgsConstructor
 public class SearchReadServiceImpl implements SearchReadService {
 
+    private final PlatformSecurityContext context;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final LoanProductReadPlatformService loanProductReadPlatformService;
     private final OfficeReadPlatformService officeReadPlatformService;
     private final DatabaseSpecificSQLGenerator sqlGenerator;
     private final SqlValidator sqlValidator;
+    private final AgentRepositoryWrapper agentRepository;
 
     @Override
     public List<SearchData> retriveMatchingData(final SearchConditions searchConditions) {
@@ -78,9 +85,12 @@ public class SearchReadServiceImpl implements SearchReadService {
     }
 
     public String searchSchema(final SearchConditions searchConditions) {
+        Optional<Agent> agent = agentRepository.findAgentByAppUserIdWithStatusCheck(this.context.authenticatedUser().getId());
+        boolean isAgent = agent.isPresent();
+        Long agentStaffId = agent.map(activeAgent -> activeAgent.getStaff().getId()).orElse(null);
 
         final String union = " union ";
-        final String clientMatchSql = """
+        final StringBuilder clientMatchSql = new StringBuilder("""
                 ( (select 'CLIENT' as entityType, c.id as entityId, c.display_name as entityName, \
                 c.external_id as entityExternalId, c.account_no as entityAccountNo, \
                 c.office_id as parentId, o.name as parentName, c.mobile_no as entityMobileNo, \
@@ -88,10 +98,13 @@ public class SearchReadServiceImpl implements SearchReadService {
                 from m_client c join m_office o on o.id = c.office_id \
                 where o.hierarchy like :hierarchy \
                 and (c.account_no like :search or c.display_name like :search \
-                or c.external_id like :search or c.mobile_no like :search)) \
-                order by c.id desc)""";
+                or c.external_id like :search or c.mobile_no like :search)""");
+               if(isAgent){
+                   clientMatchSql.append(" and c.staff_id = ").append(agentStaffId);
+               }
+               clientMatchSql.append(") order by c.id desc) ");
 
-        final String loanMatchSql = """
+        final StringBuilder loanMatchSql =  new StringBuilder("""
                 ( (select 'LOAN' as entityType, l.id as entityId, pl.name as entityName, \
                 l.external_id as entityExternalId, l.account_no as entityAccountNo, \
                 coalesce(c.id,g.id) as parentId, coalesce(c.display_name,g.display_name) as parentName, \
@@ -102,10 +115,13 @@ public class SearchReadServiceImpl implements SearchReadService {
                 left join m_office o on o.id = c.office_id \
                 left join m_product_loan pl on pl.id=l.product_id \
                 where (o.hierarchy IS NULL OR o.hierarchy like :hierarchy) \
-                and (l.account_no like :search or l.external_id like :search)) \
-                order by l.id desc)""";
+                and (l.account_no like :search or l.external_id like :search)""");
+                if(isAgent){
+                    loanMatchSql.append(" and and l.loan_officer_id = ").append(agentStaffId);
+                }
+                loanMatchSql.append(") order by l.id desc)");
 
-        final String savingMatchSql = """
+        final StringBuilder savingMatchSql =  new StringBuilder("""
                 ( (select 'SAVING' as entityType, s.id as entityId, sp.name as entityName, \
                 s.external_id as entityExternalId, s.account_no as entityAccountNo, \
                 coalesce(c.id,g.id) as parentId, coalesce(c.display_name, g.display_name) as parentName, \
@@ -117,8 +133,11 @@ public class SearchReadServiceImpl implements SearchReadService {
                 left join m_office o on o.id = c.office_id \
                 left join m_savings_product sp on sp.id=s.product_id \
                 where (o.hierarchy IS NULL OR o.hierarchy like :hierarchy) \
-                and (s.account_no like :search or s.external_id like :search)) \
-                order by s.id desc)""";
+                and (s.account_no like :search or s.external_id like :search)""");
+                if(isAgent){
+                    savingMatchSql.append(" and a.field_officer_id = ").append(agentStaffId);
+                }
+                savingMatchSql.append(") order by s.id desc)");
 
         final String shareMatchSql = """
                 ( (select 'SHARE' as entityType, s.id as entityId, sp.name as entityName, \

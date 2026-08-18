@@ -31,11 +31,14 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.jpa.CriteriaQueryFactory;
 import org.apache.fineract.organisation.office.domain.Office;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.client.domain.ClientIdentifier;
+import org.aspectj.weaver.loadtime.Agent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -51,7 +54,7 @@ public class SearchingClientRepositoryImpl implements SearchingClientRepository 
     private final CriteriaQueryFactory criteriaQueryFactory;
 
     @Override
-    public Page<SearchedClient> searchByText(String searchText, Pageable pageable, String officeHierarchy) {
+    public Page<SearchedClient> searchByText(String searchText, Pageable pageable, String officeHierarchy,Long staffId) {
         /*
          * this whole thing can be replaced with Spring Data JPA 3+ with a findBy(Specification, Pageable) call but at
          * this point the upgrade is too costly
@@ -73,11 +76,20 @@ public class SearchingClientRepositoryImpl implements SearchingClientRepository 
 
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.like(o.get("hierarchy"), hierarchyLikeValue));
-
-            String searchLikeValue = "%" + searchText + "%";
-            predicates.add(cb.or(cb.like(r.get("accountNumber"), searchLikeValue), cb.like(r.get("displayName"), searchLikeValue),
-                    cb.like(r.get("externalId"), searchLikeValue), cb.like(r.get("mobileNo"), searchLikeValue),
-                    cb.like(identity.get("documentKey"), searchLikeValue)));
+            if(staffId!=null){
+                predicates.add(
+                        cb.equal(r.get("staff").get("id"), staffId)
+                );
+            }
+            String searchLikeValue = "%" + searchText.toLowerCase(Locale.ENGLISH) + "%";
+            predicates.add(cb.or(
+                    cb.like(cb.lower(r.get("accountNumber")), searchLikeValue),
+                    cb.like(cb.lower(r.get("displayName")), searchLikeValue),
+                    cb.like(cb.lower(r.get("externalId")), searchLikeValue),
+                    cb.like(r.get("mobileNo"), searchLikeValue),
+                    cb.like(identity.get("documentKey"), searchLikeValue)
+                                )
+            );
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

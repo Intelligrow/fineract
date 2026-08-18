@@ -18,37 +18,40 @@
  */
 package org.apache.fineract.organisation.agentcollection.domain;
 
-import lombok.Getter;
+public enum AgentSettlementStatusType {
 
-@Getter
-public enum AgentStatusType {
-
-    INVALID(0, "agentStatusType.invalid"), ACTIVE(300, "agentStatusType.active"), INACTIVE(400, "agentStatusType.inactive");
+    INVALID(0, "agentSettlementStatusType.invalid"), //
+    DRAFT(100, "agentSettlementStatusType.draft"), //
+    SUBMITTED(200, "agentSettlementStatusType.submitted"), //
+    APPROVED(300, "agentSettlementStatusType.approved"), //
+    REJECTED(400, "agentSettlementStatusType.rejected"), //
+    CANCELLED(500, "agentSettlementStatusType.cancelled");
 
     private final Integer value;
     private final String code;
 
-    AgentStatusType(final Integer value, final String code) {
+    AgentSettlementStatusType(final Integer value, final String code) {
         this.value = value;
         this.code = code;
     }
 
-    public static AgentStatusType fromInt(final Integer value) {
+    public Integer getValue() {
+        return value;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public static AgentSettlementStatusType fromInt(final Integer value) {
         if (value == null) {
             return INVALID;
         }
-        return switch (value) {
-            case 300 -> ACTIVE;
-            case 400 -> INACTIVE;
-            default -> INVALID;
-        };
-    }
-
-    public boolean isActive() {
-        return this.value.equals(ACTIVE.value);
-    }
-
-    public boolean isInactive() {
-        return this.value.equals(INACTIVE.value);
+        for (final AgentSettlementStatusType type : AgentSettlementStatusType.values()) {
+            if (type.value.equals(value)) {
+                return type;
+            }
+        }
+        return INVALID;
     }
 }

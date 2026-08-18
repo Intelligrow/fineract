@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.accounting.journalentry.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Map;
@@ -26,6 +27,8 @@ import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.investor.domain.ExternalAssetOwner;
 import org.apache.fineract.investor.domain.ExternalAssetOwnerTransfer;
+import org.apache.fineract.organisation.agentcollection.domain.Agent;
+import org.apache.fineract.organisation.office.domain.Office;
 import org.apache.fineract.portfolio.loanaccount.data.AccountingBridgeDataDTO;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
@@ -79,4 +82,5 @@ public interface JournalEntryWritePlatformService {
     void createJournalEntriesForExternalOwnerTransfer(Loan loan, ExternalAssetOwnerTransfer externalAssetOwnerTransfer,
             ExternalAssetOwner previousOwner);
 
+    void createJournalEntryForAgentSettlements(Agent agent, BigDecimal amount, Long creditAccountId);
 }

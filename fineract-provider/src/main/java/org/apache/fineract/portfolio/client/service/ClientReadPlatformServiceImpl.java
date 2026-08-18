@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +47,9 @@ import org.apache.fineract.infrastructure.security.exception.InputValidationExce
 import org.apache.fineract.infrastructure.security.service.InputValidator;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
+import org.apache.fineract.organisation.agentcollection.domain.Agent;
+import org.apache.fineract.organisation.agentcollection.domain.AgentRepository;
+import org.apache.fineract.organisation.agentcollection.domain.AgentRepositoryWrapper;
 import org.apache.fineract.portfolio.client.data.ClientCollateralManagementData;
 import org.apache.fineract.portfolio.client.data.ClientData;
 import org.apache.fineract.portfolio.client.data.ClientNonPersonData;
@@ -87,6 +91,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     private final ClientRepositoryWrapper clientRepositoryWrapper;
     private final ClientMapper clientMapper;
     private final InputValidator inputValidator;
+    private final AgentRepositoryWrapper agentRepository;
 
     @Override
     public Page<ClientData> retrieveAll(final SearchParameters searchParameters) {
@@ -100,8 +105,9 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             dataValidationErrors.add(error);
             throw new PlatformApiDataValidationException(dataValidationErrors);
         }
-
-        final String userOfficeHierarchy = this.context.officeHierarchy();
+        AppUser appUser = this.context.authenticatedUser();
+        Optional<Agent> agent = agentRepository.findAgentByAppUserIdWithStatusCheck(appUser.getId());
+        final String userOfficeHierarchy = appUser.getOfficeHierarchy();
         final String underHierarchySearchString = userOfficeHierarchy + "%";
 
         // if (searchParameters.isScopedByOfficeHierarchy()) {
@@ -144,6 +150,11 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                 }
             }
         }
+        agent.ifPresent(activeAgent -> {
+            paramList.add(activeAgent.getStaff().getId());
+            sqlBuilder.append(" and c.staff_id = ? ");
+        });
+
         return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlBuilder.toString(), paramList.toArray(), this.clientToDataMapper);
     }
 

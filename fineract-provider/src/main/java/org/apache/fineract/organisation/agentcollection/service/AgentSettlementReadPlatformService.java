@@ -16,12 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.client.domain.search;
+package org.apache.fineract.organisation.agentcollection.service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.apache.fineract.infrastructure.core.service.Page;
+import org.apache.fineract.organisation.agentcollection.data.AgentSettlementData;
+import org.apache.fineract.organisation.agentcollection.data.AgentSettlementSearchParameters;
 
-public interface SearchingClientRepository {
+public interface AgentSettlementReadPlatformService {
 
-    Page<SearchedClient> searchByText(String searchText, Pageable pageable, String officeHierarchy,Long staffId);
+    AgentSettlementData retrieveSettlement(Long settlementId);
+
+    Page<AgentSettlementData> retrieveSettlements(AgentSettlementSearchParameters searchParameters);
 }

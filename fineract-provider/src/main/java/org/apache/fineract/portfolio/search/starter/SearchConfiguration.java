@@ -19,7 +19,9 @@
 package org.apache.fineract.portfolio.search.starter;
 
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
+import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.service.SqlValidator;
+import org.apache.fineract.organisation.agentcollection.domain.AgentRepositoryWrapper;
 import org.apache.fineract.organisation.office.service.OfficeReadPlatformService;
 import org.apache.fineract.portfolio.loanproduct.service.LoanProductReadPlatformService;
 import org.apache.fineract.portfolio.search.service.SearchReadService;
@@ -34,10 +36,10 @@ public class SearchConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(SearchReadService.class)
-    public SearchReadService searchReadService(NamedParameterJdbcTemplate namedParameterJdbcTemplate,
-            LoanProductReadPlatformService loanProductReadPlatformService, OfficeReadPlatformService officeReadPlatformService,
-            DatabaseSpecificSQLGenerator sqlGenerator, SqlValidator sqlValidator) {
-        return new SearchReadServiceImpl(namedParameterJdbcTemplate, loanProductReadPlatformService, officeReadPlatformService,
-                sqlGenerator, sqlValidator);
+    public SearchReadService searchReadService(PlatformSecurityContext context, NamedParameterJdbcTemplate namedParameterJdbcTemplate,
+                                               LoanProductReadPlatformService loanProductReadPlatformService, OfficeReadPlatformService officeReadPlatformService,
+                                               DatabaseSpecificSQLGenerator sqlGenerator, SqlValidator sqlValidator, AgentRepositoryWrapper agentRepository) {
+        return new SearchReadServiceImpl(context,namedParameterJdbcTemplate, loanProductReadPlatformService, officeReadPlatformService,
+                sqlGenerator, sqlValidator,agentRepository);
     }
 }

@@ -22,12 +22,14 @@ import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_CREATE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_UPDATE;
 import static org.apache.fineract.organisation.agentcollection.api.AgentApiConstants.AGENT_ENTITY_NAME;
+import static org.apache.fineract.organisation.agentcollection.api.AgentApiConstants.approveCommandParamName;
 
 import org.apache.fineract.commands.domain.CommandWrapper;
 
 public class AgentCommandWrapperBuilder {
 
     private static final String ACTION_DEACTIVATE = "DEACTIVATE";
+    private static final String ACTION_SETTLEMENT = "AGENT_SETTLEMENT";
 
     public CommandWrapper createAgent(final String json) {
         return build(ACTION_CREATE, null, "/agents/template", json);
@@ -45,8 +47,18 @@ public class AgentCommandWrapperBuilder {
         return build(ACTION_DEACTIVATE, agentId, "/agents/" + agentId + "?command=deactivate", json);
     }
 
+    public CommandWrapper ApproveAgentSettlement(final Long settlementId, final String json) {
+        return build(ACTION_SETTLEMENT,"APPROVE", settlementId, "/agents/settlements/" + settlementId + "?command=approve", json);
+    }
+
     private CommandWrapper build(final String actionName, final Long entityId, final String href, final String json) {
-        return new CommandWrapper(null, null, null, null, null, actionName, AGENT_ENTITY_NAME, entityId, null, href, json, null, null, null,
+        return new CommandWrapper(null, null, null, null, null, actionName, AGENT_ENTITY_NAME, entityId,
+                null, href, json, null, null, null,
+                null, null, null, null, null, null);
+    }
+    private CommandWrapper build(final String entityName, final String actionName, final Long entityId, final String href, final String json) {
+        return new CommandWrapper(null, null, null, null, null, actionName, AGENT_ENTITY_NAME, entityId,
+                null, href, json, null, null, null,
                 null, null, null, null, null, null);
     }
 }

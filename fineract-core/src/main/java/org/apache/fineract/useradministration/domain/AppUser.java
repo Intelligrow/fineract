@@ -745,6 +745,10 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
         return passwordEncodedValue;
     }
 
+   public String getOfficeHierarchy(){
+        return this.office.getHierarchy();
+    }
+
     public boolean isNotEnabled() {
         return !isEnabled();
     }

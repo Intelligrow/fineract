@@ -78,14 +78,14 @@ public class AgentCollectionWritePlatformServiceJpaRepositoryImpl implements Age
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public Optional<Long> recordLoanRepaymentCollection(final LoanTransaction deposit) {
-        if (deposit == null || !deposit.isRepayment()) {
+    public Optional<Long> recordLoanRepaymentCollection(final LoanTransaction transaction) {
+        if (transaction == null || !transaction.isRepayment()) {
             return Optional.empty();
         }
         return this.agentValidationService.findActiveAgentForAuthenticatedUserLocked()
-                .map(agent -> recordLoanRepaymentCollection(agent, deposit.getOffice().getId(), deposit.getLoan().getCurrencyCode(),
-                        deposit.getLoan().getId(), deposit.getId(), paymentTypeId(deposit.getPaymentDetail()), deposit.getAmount(),
-                        deposit.getTransactionDate(), externalIdValue(deposit.getExternalId()), null));
+                .map(agent -> recordLoanRepaymentCollection(agent, transaction.getOffice().getId(), transaction.getLoan().getCurrencyCode(),
+                        transaction.getLoan().getId(), transaction.getId(), paymentTypeId(transaction.getPaymentDetail()), transaction.getAmount(),
+                        transaction.getTransactionDate(), externalIdValue(transaction.getExternalId()), null));
     }
 
     @Override
