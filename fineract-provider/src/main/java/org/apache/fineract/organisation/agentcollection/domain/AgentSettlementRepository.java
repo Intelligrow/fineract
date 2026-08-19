@@ -33,6 +33,6 @@ public interface AgentSettlementRepository extends JpaRepository<AgentSettlement
     Optional<AgentSettlement> findByIdWithAgentLocked(@Param("settlementId") Long settlementId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select settlement from AgentSettlement settlement join fetch settlement.agent join fetch agent.office where settlement.id = :settlementId")
+    @Query("select settlement from AgentSettlement settlement join fetch settlement.agent agent join fetch agent.office where settlement.id = :settlementId")
     Optional<AgentSettlement> findByIdWithAgentAndOfficeLocked(@Param("settlementId") Long settlementId);
 }
