@@ -35,6 +35,35 @@
         </encoder>
     </appender>
 
+    <appender name="FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+        <file>/var/log/fineract/fineract.log</file>
+
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+
+            <!-- Daily rotation + size based rotation -->
+            <fileNamePattern>
+                /var/log/fineract/fineract.%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+
+            <!-- Maximum size of one file -->
+            <maxFileSize>100MB</maxFileSize>
+
+            <!-- Keep 30 days -->
+            <maxHistory>30</maxHistory>
+
+            <!-- Maximum total size -->
+            <totalSizeCap>10GB</totalSizeCap>
+
+        </rollingPolicy>
+
+    </appender>
+
     <!-- But these three INFO are still handy ;-) just to see when it's up and running -->
     <logger name="org.springframework.boot.web.embedded.tomcat.TomcatWebServer" level="info"/>
     <logger name="org.apache.fineract.ServerApplication" level="info"/>
@@ -61,6 +90,7 @@
                  but it's still possible to override this using java -Dlogging.level.root=info -jar fineract-provider.jar, as per https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-custom-log-levels -->
             <root level="info">
                 <appender-ref ref="CONSOLE"/>
+                <appender-ref ref="FILE"/>
             </root>
         </else>
     </if>

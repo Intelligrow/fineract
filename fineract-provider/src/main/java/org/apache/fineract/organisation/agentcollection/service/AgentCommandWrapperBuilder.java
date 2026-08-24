@@ -57,7 +57,7 @@ public class AgentCommandWrapperBuilder {
                 null, null, null, null, null, null);
     }
     private CommandWrapper build(final String entityName, final String actionName, final Long entityId, final String href, final String json) {
-        return new CommandWrapper(null, null, null, null, null, actionName, AGENT_ENTITY_NAME, entityId,
+        return new CommandWrapper(null, null, null, null, null, actionName, entityName, entityId,
                 null, href, json, null, null, null,
                 null, null, null, null, null, null);
     }

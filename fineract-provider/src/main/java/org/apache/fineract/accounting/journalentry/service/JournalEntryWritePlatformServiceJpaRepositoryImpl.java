@@ -1052,7 +1052,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                 null, null, null, null, null, null);
         helper.persistJournalEntry(debitGlJournalEntry);
 
-        final JournalEntry creditGlJournalEntry = JournalEntry.createNew(office, null, debitGlAccount, agent.getCurrencyCode(),
+        final JournalEntry creditGlJournalEntry = JournalEntry.createNew(office, null, creditGlAccount, agent.getCurrencyCode(),
                 transactionId, false,  DateUtils.getBusinessLocalDate(), JournalEntryType.CREDIT,amount, "", null,
                 null, null, null, null, null, null);
         helper.persistJournalEntry(creditGlJournalEntry);
