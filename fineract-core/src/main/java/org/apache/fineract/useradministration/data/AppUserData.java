@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.organisation.office.data.OfficeData;
 import org.apache.fineract.organisation.staff.data.StaffData;
 import org.apache.fineract.portfolio.client.data.ClientData;
@@ -53,6 +54,8 @@ public final class AppUserData {
     private final Collection<OfficeData> allowedOffices;
     private final Collection<RoleData> availableRoles;
     private final Collection<RoleData> selectedRoles;
+    private final Collection<EnumOptionData> userTypeOptions;
+    private final EnumOptionData selectedUserType;
     private final StaffData staff;
 
     @Setter
@@ -81,6 +84,8 @@ public final class AppUserData {
         this.rowIndex = rowIndex;
         this.allowedOffices = null;
         this.availableRoles = null;
+        this.userTypeOptions = null;
+        this.selectedUserType = null;
         this.selectedRoles = null;
         this.staff = null;
         this.clients = null;
@@ -88,27 +93,28 @@ public final class AppUserData {
 
     public static AppUserData template(final AppUserData user, final Collection<OfficeData> officesForDropdown) {
         return new AppUserData(user.id, user.username, user.email, user.officeId, user.officeName, user.firstname, user.lastname,
-                user.availableRoles, user.selectedRoles, officesForDropdown, user.staff, user.passwordNeverExpires);
+                user.availableRoles, user.userTypeOptions, user.selectedUserType, user.selectedRoles, officesForDropdown, user.staff, user.passwordNeverExpires);
     }
 
-    public static AppUserData template(final Collection<OfficeData> offices, final Collection<RoleData> availableRoles) {
-        return new AppUserData(null, null, null, null, null, null, null, availableRoles, null, offices, null, null);
+    public static AppUserData template(final Collection<OfficeData> offices, final Collection<RoleData> availableRoles, final Collection<EnumOptionData> userTypeOptions) {
+        return new AppUserData(null, null, null, null, null, null, null, availableRoles, userTypeOptions, null, null, offices, null, null);
     }
 
     public static AppUserData dropdown(final Long id, final String username) {
-        return new AppUserData(id, username, null, null, null, null, null, null, null, null, null, null);
+        return new AppUserData(id, username, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     public static AppUserData instance(final Long id, final String username, final String email, final Long officeId,
             final String officeName, final String firstname, final String lastname, final Collection<RoleData> availableRoles,
+            final Collection<EnumOptionData> userTypeOptions, final EnumOptionData selectedUserType,
             final Collection<RoleData> selectedRoles, final StaffData staff, final Boolean passwordNeverExpire) {
-        return new AppUserData(id, username, email, officeId, officeName, firstname, lastname, availableRoles, selectedRoles, null, staff,
-                passwordNeverExpire);
+        return new AppUserData(id, username, email, officeId, officeName, firstname, lastname, availableRoles, userTypeOptions,
+                selectedUserType, selectedRoles, null, staff, passwordNeverExpire);
     }
 
     private AppUserData(final Long id, final String username, final String email, final Long officeId, final String officeName,
-            final String firstname, final String lastname, final Collection<RoleData> availableRoles,
-            final Collection<RoleData> selectedRoles, final Collection<OfficeData> allowedOffices, final StaffData staff,
+            final String firstname, final String lastname, final Collection<RoleData> availableRoles, final Collection<EnumOptionData> userTypeOptions,
+            EnumOptionData selectedUserType, final Collection<RoleData> selectedRoles, final Collection<OfficeData> allowedOffices, final StaffData staff,
             final Boolean passwordNeverExpire) {
         this.id = id;
         this.username = username;
@@ -119,6 +125,8 @@ public final class AppUserData {
         this.email = email;
         this.allowedOffices = allowedOffices;
         this.availableRoles = availableRoles;
+        this.userTypeOptions = userTypeOptions;
+        this.selectedUserType = selectedUserType;
         this.selectedRoles = selectedRoles;
         this.staff = staff;
         this.passwordNeverExpires = passwordNeverExpire;
