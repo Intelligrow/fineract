@@ -237,7 +237,7 @@ public class AgentReadPlatformServiceImpl implements AgentReadPlatformService {
 
     private Collection<AgentTemplateOptionData> agentOptions() {
         final String hierarchySearchString = this.context.authenticatedUser().getOffice().getHierarchy() + "%";
-        final String sql = "select a.id as id, coalesce(s.display_name, au.username) as name from m_agent a "
+        final String sql = "select a.id as id, o.id as office_id, coalesce(s.display_name, au.username) as name from m_agent a "
                 + "join m_appuser au on au.id = a.appuser_id join m_staff s on s.id = a.staff_id "
                 + "join m_office o on o.id = a.office_id where o.hierarchy like ? order by name";
         return this.jdbcTemplate.query(sql, new AgentTemplateOptionMapper(), hierarchySearchString);
@@ -368,7 +368,7 @@ public class AgentReadPlatformServiceImpl implements AgentReadPlatformService {
 
         @Override
         public AgentTemplateOptionData mapRow(final ResultSet rs, final int rowNum) throws SQLException {
-            return AgentTemplateOptionData.builder().id(rs.getObject("id")).name(rs.getString("name")).build();
+            return AgentTemplateOptionData.builder().id(rs.getObject("id")).name(rs.getString("name")).officeId(rs.getLong("office_id")).build();
         }
     }
 

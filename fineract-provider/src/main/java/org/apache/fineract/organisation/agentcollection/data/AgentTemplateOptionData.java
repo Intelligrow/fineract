@@ -27,4 +27,5 @@ public class AgentTemplateOptionData {
 
     Object id;
     String name;
+    Long officeId;
 }
