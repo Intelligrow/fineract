@@ -42,6 +42,7 @@ import org.apache.fineract.infrastructure.core.serialization.ToApiJsonSerializer
 import org.apache.fineract.infrastructure.security.constants.TwoFactorConstants;
 import org.apache.fineract.infrastructure.security.data.AuthenticatedUserData;
 import org.apache.fineract.infrastructure.security.exception.PasswordResetRequiredException;
+import org.apache.fineract.infrastructure.security.service.AgentLookupPlatformService;
 import org.apache.fineract.infrastructure.security.service.SpringSecurityPlatformSecurityContext;
 import org.apache.fineract.useradministration.data.RoleData;
 import org.apache.fineract.useradministration.domain.AppUser;
@@ -75,6 +76,7 @@ public class AuthenticationApiResource {
     private final DaoAuthenticationProvider customAuthenticationProvider;
     private final ToApiJsonSerializer<AuthenticatedUserData> apiJsonSerializerService;
     private final SpringSecurityPlatformSecurityContext springSecurityPlatformSecurityContext;
+    private final AgentLookupPlatformService agentLookupPlatformService;
 
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -127,6 +129,9 @@ public class AuthenticationApiResource {
 
             final EnumOptionData organisationalRole = principal.organisationalRoleData();
 
+            final boolean isAgent = this.agentLookupPlatformService.isAgent(principal.getId());
+            final Long agentId = this.agentLookupPlatformService.findAgentIdByAppUserId(principal.getId());
+
             boolean isTwoFactorRequired = this.twoFactorEnabled
                     && !principal.hasSpecificPermissionTo(TwoFactorConstants.BYPASS_TWO_FACTOR_PERMISSION);
             Long userId = principal.getId();
@@ -142,7 +147,8 @@ public class AuthenticationApiResource {
                         .setOrganisationalRole(organisationalRole).setRoles(roles).setPermissions(permissions).setUserId(principal.getId())
                         .setAuthenticated(true)
                         .setBase64EncodedAuthenticationKey(new String(base64EncodedAuthenticationKey, StandardCharsets.UTF_8))
-                        .setTwoFactorAuthenticationRequired(isTwoFactorRequired);
+                        .setTwoFactorAuthenticationRequired(isTwoFactorRequired)
+                        .setAgent(isAgent).setAgentId(agentId);
 
             }
 

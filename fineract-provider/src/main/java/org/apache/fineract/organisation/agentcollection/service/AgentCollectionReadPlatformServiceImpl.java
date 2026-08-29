@@ -324,10 +324,14 @@ public class AgentCollectionReadPlatformServiceImpl implements AgentCollectionRe
                     + "act.savings_transaction_id as savingsTransactionId, act.payment_type_id as paymentTypeId, "
                     + "pt.value as paymentTypeName, act.amount as amount, act.currency_code as currencyCode, "
                     + "act.transaction_date as transactionDate, act.status_enum as statusEnum, act.settlement_id as settlementId, "
-                    + "act.settled_date as settledDate, act.external_id as externalId, act.mobile_reference as mobileReference "
+                    + "act.settled_date as settledDate, act.external_id as externalId, act.mobile_reference as mobileReference, "
+                    + "mc.display_name as clientName, mc.account_no as clientAccountNo, mc.mobile_no as clientMobileNo "
                     + "from m_agent_collection_transaction act join m_agent a on a.id = act.agent_id "
                     + "join m_office o on o.id = act.office_id join m_payment_type pt on pt.id = act.payment_type_id "
-                    + "join m_appuser as ma on  ma.id = a.appuser_id ";
+                    + "join m_appuser as ma on  ma.id = a.appuser_id "
+                    + "left join m_loan ml on ml.id = act.loan_id "
+                    + "left join m_savings_account msa on msa.id = act.savings_account_id "
+                    + "left join m_client mc on mc.id = coalesce(ml.client_id, msa.client_id) ";
 
         }
 
@@ -345,7 +349,8 @@ public class AgentCollectionReadPlatformServiceImpl implements AgentCollectionRe
                     .currencyCode(rs.getString("currencyCode")).transactionDate(JdbcSupport.getLocalDate(rs, "transactionDate"))
                     .status(AgentEnumerations.collectionTransactionStatus(statusEnum)).settlementId(JdbcSupport.getLong(rs, "settlementId"))
                     .settledDate(JdbcSupport.getLocalDate(rs, "settledDate")).externalId(rs.getString("externalId"))
-                    .mobileReference(rs.getString("mobileReference")).agentName(rs.getString("agentName")).build();
+                    .mobileReference(rs.getString("mobileReference")).agentName(rs.getString("agentName"))
+                    .clientAccountNo(rs.getString("clientAccountNo")).clientMobileNo(rs.getString("clientMobileNo")).build();
         }
     }
 }

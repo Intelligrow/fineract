@@ -84,7 +84,7 @@ public class SQLBuilder {
                     "criteria cannot contain more than 1 space (between column name and operator): " + trimmedCriteria);
         }
         if (!operator.equals("=") && !operator.equals("<") && !operator.equals(">") && !operator.equals("<=") && !operator.equals(">=")
-                && !operator.equals("<>") && !operator.equalsIgnoreCase("like") && !operator.equalsIgnoreCase("is")) {
+                && !operator.equals("<>") && !operator.equalsIgnoreCase("like") && !operator.equalsIgnoreCase("ilike") && !operator.equalsIgnoreCase("is")) {
             // add support for SQL's BETWEEN and IN, if/when ever needed.. (it's
             // a little more than just adding above, as it can have multiple
             // arguments)

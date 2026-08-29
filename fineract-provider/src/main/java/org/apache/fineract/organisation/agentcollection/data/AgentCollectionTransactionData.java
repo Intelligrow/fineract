@@ -49,4 +49,7 @@ public class AgentCollectionTransactionData {
     String externalId;
     String mobileReference;
     BigDecimal runningBalance;
+    String clientName;
+    String clientAccountNo;
+    String clientMobileNo;
 }
