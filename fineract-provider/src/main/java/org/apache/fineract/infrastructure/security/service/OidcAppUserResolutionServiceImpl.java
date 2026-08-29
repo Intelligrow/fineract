@@ -102,7 +102,7 @@ public class OidcAppUserResolutionServiceImpl implements OidcAppUserResolutionSe
         String resolvedFirstName = firstName != null ? firstName : username;
         String resolvedLastName = lastName != null ? lastName : "";
 
-        AppUser appUser = new AppUser(headOffice, springUser, roles, resolvedEmail, resolvedFirstName, resolvedLastName, null, true, false);
+        AppUser appUser = new AppUser(headOffice, springUser, roles, resolvedEmail, resolvedFirstName, resolvedLastName, null, true, false, null);
 
         AppUser saved = appUserRepository.saveAndFlush(appUser);
         log.info("Auto-created Fineract user '{}' (id={}) from OIDC identity", username, saved.getId());

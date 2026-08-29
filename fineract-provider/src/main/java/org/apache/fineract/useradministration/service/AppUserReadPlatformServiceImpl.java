@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.organisation.office.data.OfficeData;
@@ -33,6 +34,7 @@ import org.apache.fineract.organisation.staff.service.StaffReadService;
 import org.apache.fineract.useradministration.data.AppUserData;
 import org.apache.fineract.useradministration.data.RoleData;
 import org.apache.fineract.useradministration.domain.AppUser;
+import org.apache.fineract.useradministration.domain.AppUserEnumerations;
 import org.apache.fineract.useradministration.domain.AppUserRepository;
 import org.apache.fineract.useradministration.domain.Role;
 import org.apache.fineract.useradministration.exception.UserNotFoundException;
@@ -88,8 +90,9 @@ public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformServic
 
         final Collection<OfficeData> offices = this.officeReadPlatformService.retrieveAllOfficesForDropdown();
         final Collection<RoleData> availableRoles = this.roleReadPlatformService.retrieveAllActiveRoles();
+        final Collection<EnumOptionData> userTypeOptions = AppUserEnumerations.appUserTypeOptions();
 
-        return AppUserData.template(offices, availableRoles);
+        return AppUserData.template(offices, availableRoles, userTypeOptions);
     }
 
     @Override
@@ -119,8 +122,10 @@ public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformServic
             linkedStaff = null;
         }
 
+        final EnumOptionData selectedUserType = user.userTypeData();
+
         AppUserData retUser = AppUserData.instance(user.getId(), user.getUsername(), user.getEmail(), user.getOffice().getId(),
-                user.getOffice().getName(), user.getFirstname(), user.getLastname(), availableRoles, selectedUserRoles, linkedStaff,
+                user.getOffice().getName(), user.getFirstname(), user.getLastname(), availableRoles, null, selectedUserType, selectedUserRoles, linkedStaff,
                 user.getPasswordNeverExpires());
 
         return retUser;
@@ -149,6 +154,8 @@ public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformServic
             final Long staffId = JdbcSupport.getLong(rs, "staffId");
             final Boolean passwordNeverExpire = rs.getBoolean("passwordNeverExpires");
             final Collection<RoleData> selectedRoles = this.roleReadPlatformService.retrieveAppUserRoles(id);
+            final Integer userTypeValue = JdbcSupport.getInteger(rs, "userType");
+            final EnumOptionData selectedUserType = AppUserEnumerations.appUserType(userTypeValue);
 
             final StaffData linkedStaff;
             if (staffId != null) {
@@ -156,12 +163,12 @@ public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformServic
             } else {
                 linkedStaff = null;
             }
-            return AppUserData.instance(id, username, email, officeId, officeName, firstname, lastname, null, selectedRoles, linkedStaff,
+            return AppUserData.instance(id, username, email, officeId, officeName, firstname, lastname, null, null, selectedUserType, selectedRoles, linkedStaff,
                     passwordNeverExpire);
         }
 
         public String schema() {
-            return " u.id as id, u.username as username, u.firstname as firstname, u.lastname as lastname, u.email as email, u.password_never_expires as passwordNeverExpires, "
+            return " u.id as id, u.username as username, u.firstname as firstname, u.lastname as lastname, u.email as email, u.password_never_expires as passwordNeverExpires, u.user_type_enum as userType, "
                     + " u.office_id as officeId, o.name as officeName, u.staff_id as staffId from m_appuser u "
                     + " join m_office o on o.id = u.office_id where o.hierarchy like ? and u.is_deleted=false order by u.username";
         }

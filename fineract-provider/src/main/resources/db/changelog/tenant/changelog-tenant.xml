@@ -260,5 +260,6 @@
     <include file="parts/0239_add_retained_earning_job.xml" relativeToChangelogFile="true"/>
     <include file="parts/0240_add_retained_earning_global_configuration.xml" relativeToChangelogFile="true"/>
     <include file="parts/0242_agent_collection.xml" relativeToChangelogFile="true"/>
+    <include file="parts/0244_add_user_type_enum_to_m_appuser.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

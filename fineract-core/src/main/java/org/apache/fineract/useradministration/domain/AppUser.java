@@ -155,6 +155,10 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
     @Column(name = "is_password_reset_enabled", nullable = false)
     private boolean passwordResetAllowed = false;
 
+    @Getter
+    @Column(name = "user_type_enum", nullable = false)
+    private Integer userType;
+
     public static AppUser fromJson(final Office userOffice, final Staff linkedStaff, final Set<Role> allRoles, final JsonCommand command) {
 
         final String username = command.stringValueOfParameterNamed("username");
@@ -181,6 +185,11 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
             loginRetryLimitEnabled = command.booleanPrimitiveValueOfParameterNamed(AppUserConstants.IS_LOGIN_RETRIES_ENABLED);
         }
 
+        Long userType = AppUserType.INVALID.getValue().longValue();
+        if (command.parameterExists("userType")) {
+            userType = command.longValueOfParameterNamed("userType");
+        }
+
         final Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("DUMMY_ROLE_NOT_USED_OR_PERSISTED_TO_AVOID_EXCEPTION"));
 
@@ -192,7 +201,7 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
         final String lastname = command.stringValueOfParameterNamed("lastname");
 
         final AppUser appUser = new AppUser(userOffice, user, allRoles, email, firstname, lastname, linkedStaff, passwordNeverExpire,
-                cannotChangePassword);
+                cannotChangePassword, userType);
         appUser.updateLoginRetryLimitEnabled(resolveLoginRetryLimitEnabled(username, loginRetryLimitEnabled));
         if (command.parameterExists(AppUserConstants.IS_PASSWORD_RESET_ALLOWED)) {
             appUser.updatePasswordResetAllowed(command.booleanPrimitiveValueOfParameterNamed(AppUserConstants.IS_PASSWORD_RESET_ALLOWED));
@@ -206,10 +215,12 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
         this.roles = new HashSet<>();
         this.failedLoginAttempts = 0;
         this.loginRetryLimitEnabled = false;
+        this.userType = AppUserType.INVALID.getValue();
     }
 
     public AppUser(final Office office, final User user, final Set<Role> roles, final String email, final String firstname,
-            final String lastname, final Staff staff, final boolean passwordNeverExpire, final Boolean cannotChangePassword) {
+            final String lastname, final Staff staff, final boolean passwordNeverExpire, final Boolean cannotChangePassword,
+            final Long userType) {
         this.office = office;
         this.email = email.trim();
         this.username = user.getUsername().trim();
@@ -229,6 +240,7 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
         this.failedLoginAttempts = 0;
         this.loginRetryLimitEnabled = false;
         this.passwordResetAllowed = false;
+        this.userType = userType == null ? AppUserType.INVALID.getValue() : userType.intValue();
     }
 
     public EnumOptionData organisationalRoleData() {
@@ -237,6 +249,10 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
             organisationalRole = StaffEnumerations.organisationalRole(this.staff.getOrganisationalRoleType());
         }
         return organisationalRole;
+    }
+
+    public EnumOptionData userTypeData() {
+        return AppUserEnumerations.appUserType(this.userType);
     }
 
     public Map<String, Object> changePassword(final JsonCommand command, final PlatformPasswordEncoder platformPasswordEncoder) {
@@ -394,6 +410,13 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
             final boolean newValue = command.booleanPrimitiveValueOfParameterNamed(AppUserConstants.IS_PASSWORD_RESET_ALLOWED);
             actualChanges.put(AppUserConstants.IS_PASSWORD_RESET_ALLOWED, newValue);
             updatePasswordResetAllowed(newValue);
+        }
+
+        final String userTypeParamName = "userType";
+        if (command.isChangeInLongParameterNamed(userTypeParamName, this.userType == null ? null : this.userType.longValue())) {
+            final Long newValue = command.longValueOfParameterNamed(userTypeParamName);
+            actualChanges.put(userTypeParamName, newValue);
+            this.userType = newValue.intValue();
         }
         return actualChanges;
     }
