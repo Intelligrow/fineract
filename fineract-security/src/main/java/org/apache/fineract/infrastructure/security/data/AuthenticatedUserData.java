@@ -61,4 +61,10 @@ public class AuthenticatedUserData {
 
     @SuppressWarnings("unused")
     private boolean isTwoFactorAuthenticationRequired;
+
+    @SuppressWarnings("unused")
+    private boolean isAgent;
+
+    @SuppressWarnings("unused")
+    private Long agentId;
 }

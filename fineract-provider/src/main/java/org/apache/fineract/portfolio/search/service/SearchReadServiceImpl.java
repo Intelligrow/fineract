@@ -77,9 +77,9 @@ public class SearchReadServiceImpl implements SearchReadService {
         final MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("hierarchy", hierarchy + "%");
         if (searchConditions.getExactMatch()) {
-            params.addValue("search", searchConditions.getSearchQuery());
+            params.addValue("search", searchConditions.getSearchQuery().toLowerCase());
         } else {
-            params.addValue("search", "%" + searchConditions.getSearchQuery() + "%");
+            params.addValue("search", "%" + searchConditions.getSearchQuery().toLowerCase() + "%");
         }
         return namedParameterJdbcTemplate.query(searchSchema(searchConditions), params, rm);
     }
@@ -117,7 +117,7 @@ public class SearchReadServiceImpl implements SearchReadService {
                 where (o.hierarchy IS NULL OR o.hierarchy like :hierarchy) \
                 and (l.account_no like :search or l.external_id like :search)""");
                 if(isAgent){
-                    loanMatchSql.append(" and and l.loan_officer_id = ").append(agentStaffId);
+                    loanMatchSql.append(" and l.loan_officer_id = ").append(agentStaffId);
                 }
                 loanMatchSql.append(") order by l.id desc)");
 
@@ -135,7 +135,7 @@ public class SearchReadServiceImpl implements SearchReadService {
                 where (o.hierarchy IS NULL OR o.hierarchy like :hierarchy) \
                 and (s.account_no like :search or s.external_id like :search)""");
                 if(isAgent){
-                    savingMatchSql.append(" and a.field_officer_id = ").append(agentStaffId);
+                    savingMatchSql.append(" and s.field_officer_id = ").append(agentStaffId);
                 }
                 savingMatchSql.append(") order by s.id desc)");
 
