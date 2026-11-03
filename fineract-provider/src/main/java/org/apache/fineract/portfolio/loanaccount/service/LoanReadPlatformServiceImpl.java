@@ -60,6 +60,8 @@ import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
+import org.apache.fineract.organisation.agentcollection.domain.AgentRepositoryWrapper;
+import org.apache.fineract.organisation.agentcollection.service.AgentCollectionTemplateService;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrency;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrencyRepositoryWrapper;
@@ -200,12 +202,16 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
     private final InterestRefundServiceDelegate interestRefundServiceDelegate;
     private final LoanMaximumAmountCalculator loanMaximumAmountCalculator;
     private final LoanRepaymentScheduleService loanRepaymentScheduleService;
+    private final AgentCollectionTemplateService agentCollectionTemplateService;
+    private final AgentRepositoryWrapper agentRepository;
 
     @Override
     public LoanAccountData retrieveOne(final Long loanId) {
 
         try {
-            final String hierarchy = getHierarchyString();
+            AppUser currentUser = this.context.getAuthenticatedUserIfPresent();
+
+            final String hierarchy = Optional.ofNullable(currentUser).map(appUser -> appUser.getOffice().getHierarchy()).orElse(".");
             final String hierarchySearchString = hierarchy + "%";
 
             final LoanMapper rm = new LoanMapper(sqlGenerator, delinquencyReadPlatformService);
@@ -216,6 +222,9 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
             sqlBuilder.append(" join m_office o on (o.id = c.office_id or o.id = g.office_id) ");
             sqlBuilder.append(" left join m_office transferToOffice on transferToOffice.id = c.transfer_to_office_id ");
             sqlBuilder.append(" where l.id=? and ( o.hierarchy like ? or transferToOffice.hierarchy like ?)");
+
+           this.agentRepository.findAgentByAppUserIdWithStatusCheck(currentUser.getId())
+                    .map(agent -> sqlBuilder.append(" and l.loan_officer_id = " + agent.getStaff().getId()));
 
             return this.jdbcTemplate.queryForObject(sqlBuilder.toString(), rm, loanId, hierarchySearchString, hierarchySearchString);
         } catch (final EmptyResultDataAccessException e) {
@@ -549,7 +558,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
         LoanTransactionData loanTransactionData = this.jdbcTemplate.queryForObject("select " + mapper.schema(), mapper, // NOSONAR
                 LoanTransactionType.REPAYMENT.getValue(), LoanTransactionType.DOWN_PAYMENT.getValue(), loanId);
         final Collection<PaymentTypeData> paymentOptions = this.paymentTypeReadPlatformService.retrieveAllPaymentTypes();
-        return LoanTransactionData.templateOnTop(loanTransactionData, paymentOptions);
+        return this.agentCollectionTemplateService.getLoanRepaymentTemplateData(loanTransactionData, paymentOptions)
+                .orElseGet(() -> LoanTransactionData.templateOnTop(loanTransactionData, paymentOptions));
     }
 
     @Override
@@ -2140,13 +2150,15 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
                     + " - coalesce(ls.penalty_charges_waived_derived, 0)";
             final String totalDueExpression = principalDueExpression + " + " + interestDueExpression + " + " + feeDueExpression + " + "
                     + penaltyDueExpression;
-            return " GREATEST(loan_transaction.transaction_date, ls.dueDate) as transactionDate," + " " + principalDueExpression
+            return " l.id as loanId, coalesce(c.office_id, g.office_id) as officeId,"
+                    + " GREATEST(loan_transaction.transaction_date, ls.dueDate) as transactionDate," + " " + principalDueExpression
                     + " as principalDue," + " " + interestDueExpression + " as interestDue," + " " + feeDueExpression + " as feeDue," + " "
                     + penaltyDueExpression + " as penaltyDue," + " l.currency_code as currencyCode,"
                     + " l.currency_digits as currencyDigits," + " l.currency_multiplesof as inMultiplesOf,"
                     + " l.net_disbursal_amount as netDisbursalAmount," + " rc." + sqlGenerator.escape("name") + " as currencyName,"
                     + " rc.display_symbol as currencyDisplaySymbol," + " rc.internationalized_name_code as currencyNameCode" + " FROM"
                     + " m_loan l" + " JOIN m_currency rc on rc." + sqlGenerator.escape("code") + " = l.currency_code"
+                    + " left join m_client c on c.id = l.client_id" + " left join m_group g on g.id = l.group_id"
                     + " JOIN m_loan_repayment_schedule ls ON ls.loan_id = l.id" + " LEFT JOIN ("
                     + " select tr.loan_id, max(tr.transaction_date) as transaction_date" + " from m_loan_transaction tr"
                     + " where tr.transaction_type_enum in (?,?)" + " AND tr.is_reversed = false" + " group by tr.loan_id"
@@ -2169,8 +2181,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
             final BigDecimal overPaymentPortion = null;
             final BigDecimal netDisbursalAmount = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "netDisbursalAmount");
             final Long id = null;
-            final Long loanId = null;
-            final Long officeId = null;
+            final Long loanId = JdbcSupport.getLong(rs, "loanId");
+            final Long officeId = JdbcSupport.getLong(rs, "officeId");
             final String officeName = null;
             boolean manuallyReversed = false;
             final PaymentDetailData paymentDetailData = null;

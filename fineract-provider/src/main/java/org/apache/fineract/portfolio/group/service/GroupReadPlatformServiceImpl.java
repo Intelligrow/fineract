@@ -208,7 +208,7 @@ public class GroupReadPlatformServiceImpl implements GroupReadPlatformService {
 
         final String name = searchCriteria.getName();
         if (name != null) {
-            extraCriteria.addNonNullCriteria("g.display_name like", "%" + name + "%");
+            extraCriteria.addNonNullCriteria("g.display_name ilike", "%" + name + "%");
         }
 
         final String hierarchy = searchCriteria.getHierarchy();

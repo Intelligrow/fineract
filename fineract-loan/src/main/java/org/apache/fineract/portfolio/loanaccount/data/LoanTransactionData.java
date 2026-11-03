@@ -129,6 +129,9 @@ public class LoanTransactionData implements Serializable {
     private LocalDate nextInstallmentDueDate;
     private LocalDate calculatedStartDate;
 
+    @Setter
+    private Object agentCollection;
+
     public static LoanTransactionData importInstance(BigDecimal repaymentAmount, LocalDate lastRepaymentDate, Long repaymentTypeId,
             Integer rowIndex, String locale, String dateFormat) {
         return LoanTransactionData.builder().transactionAmount(repaymentAmount).transactionDate(lastRepaymentDate)
@@ -158,7 +161,7 @@ public class LoanTransactionData implements Serializable {
                 .externalId(loanTransactionData.externalId).transfer(loanTransactionData.transfer)
                 .fixedEmiAmount(loanTransactionData.fixedEmiAmount).outstandingLoanBalance(loanTransactionData.outstandingLoanBalance)
                 .manuallyReversed(loanTransactionData.manuallyReversed).loanId(loanTransactionData.loanId)
-                .externalLoanId(loanTransactionData.externalLoanId).build();
+                .externalLoanId(loanTransactionData.externalLoanId).agentCollection(loanTransactionData.agentCollection).build();
     }
 
     public static LoanTransactionData templateOnTop(final LoanTransactionData loanTransactionData, final LoanTransactionEnumData typeOf) {
@@ -172,7 +175,8 @@ public class LoanTransactionData implements Serializable {
                 .paymentTypeOptions(loanTransactionData.paymentTypeOptions).externalId(loanTransactionData.externalId)
                 .transfer(loanTransactionData.transfer).fixedEmiAmount(loanTransactionData.fixedEmiAmount)
                 .outstandingLoanBalance(loanTransactionData.outstandingLoanBalance).manuallyReversed(loanTransactionData.manuallyReversed)
-                .loanId(loanTransactionData.loanId).externalLoanId(loanTransactionData.externalLoanId).build();
+                .loanId(loanTransactionData.loanId).externalLoanId(loanTransactionData.externalLoanId)
+                .agentCollection(loanTransactionData.agentCollection).build();
     }
 
     public static LoanTransactionData loanTransactionDataForCreditTemplate(final LoanTransactionEnumData transactionType,

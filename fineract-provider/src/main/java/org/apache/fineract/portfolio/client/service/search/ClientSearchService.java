@@ -23,10 +23,13 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.service.PagedRequest;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.organisation.agentcollection.domain.Agent;
+import org.apache.fineract.organisation.agentcollection.domain.AgentRepositoryWrapper;
 import org.apache.fineract.portfolio.client.domain.ClientRepository;
 import org.apache.fineract.portfolio.client.service.search.domain.ClientSearchData;
 import org.apache.fineract.portfolio.client.service.search.domain.ClientTextSearch;
 import org.apache.fineract.portfolio.client.service.search.mapper.ClientSearchDataMapper;
+import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -40,6 +43,7 @@ public class ClientSearchService {
     private final PlatformSecurityContext context;
     private final ClientRepository clientRepository;
     private final ClientSearchDataMapper clientSearchDataMapper;
+    private final AgentRepositoryWrapper agentRepository;
 
     public Page<ClientSearchData> searchByText(PagedRequest<ClientTextSearch> searchRequest) {
         validateTextSearchRequest(searchRequest);
@@ -53,7 +57,11 @@ public class ClientSearchService {
     }
 
     private Page<ClientSearchData> executeTextSearch(PagedRequest<ClientTextSearch> searchRequest) {
-        final String hierarchy = context.authenticatedUser().getOffice().getHierarchy();
+        AppUser appUser = context.authenticatedUser();
+        final String hierarchy = appUser
+                .getOffice().getHierarchy();
+        Long staffId = this.agentRepository.findAgentByAppUserIdWithStatusCheck(appUser.getId())
+                .map(agent -> agent.getStaff().getId()).orElse(null);
 
         Optional<ClientTextSearch> request = searchRequest.getRequest();
         String requestSearchText = request.map(ClientTextSearch::getText).orElse(null);
@@ -61,6 +69,6 @@ public class ClientSearchService {
 
         Pageable pageable = searchRequest.toPageable();
 
-        return clientRepository.searchByText(searchText, pageable, hierarchy).map(clientSearchDataMapper::map);
+        return clientRepository.searchByText(searchText, pageable, hierarchy,staffId).map(clientSearchDataMapper::map);
     }
 }

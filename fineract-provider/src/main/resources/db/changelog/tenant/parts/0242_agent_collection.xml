@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet author="fineract" id="1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_agent"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_agent">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_m_agent"/>
+            </column>
+            <column name="appuser_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="staff_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="office_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payment_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_code" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status_enum" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maximum_cash_in_hand" type="DECIMAL(19, 6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maximum_daily_total_collection" type="DECIMAL(19, 6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_on_utc" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_on_utc" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <addUniqueConstraint columnNames="appuser_id" constraintName="uk_m_agent_appuser" tableName="m_agent"/>
+        <addUniqueConstraint columnNames="staff_id" constraintName="uk_m_agent_staff" tableName="m_agent"/>
+        <addForeignKeyConstraint baseColumnNames="appuser_id" baseTableName="m_agent" constraintName="fk_m_agent_appuser"
+                                 referencedColumnNames="id" referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="staff_id" baseTableName="m_agent" constraintName="fk_m_agent_staff"
+                                 referencedColumnNames="id" referencedTableName="m_staff"/>
+        <addForeignKeyConstraint baseColumnNames="office_id" baseTableName="m_agent" constraintName="fk_m_agent_office"
+                                 referencedColumnNames="id" referencedTableName="m_office"/>
+        <addForeignKeyConstraint baseColumnNames="payment_type_id" baseTableName="m_agent" constraintName="fk_m_agent_payment_type"
+                                 referencedColumnNames="id" referencedTableName="m_payment_type"/>
+        <addForeignKeyConstraint baseColumnNames="created_by" baseTableName="m_agent" constraintName="fk_m_agent_created_by"
+                                 referencedColumnNames="id" referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="last_modified_by" baseTableName="m_agent" constraintName="fk_m_agent_last_modified_by"
+                                 referencedColumnNames="id" referencedTableName="m_appuser"/>
+        <createIndex indexName="idx_m_agent_office_status" tableName="m_agent">
+            <column name="office_id"/>
+            <column name="status_enum"/>
+        </createIndex>
+        <createIndex indexName="idx_m_agent_appuser_status" tableName="m_agent">
+            <column name="appuser_id"/>
+            <column name="status_enum"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="m_agent"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet author="fineract" id="2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_agent_transaction_limit"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_agent_transaction_limit">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_m_agent_transaction_limit"/>
+            </column>
+            <column name="agent_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_type_enum" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maximum_single_amount" type="DECIMAL(19, 6)"/>
+            <column name="maximum_daily_amount" type="DECIMAL(19, 6)"/>
+            <column name="is_enabled" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_on_utc" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_on_utc" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <addUniqueConstraint columnNames="agent_id, transaction_type_enum" constraintName="uk_m_agent_transaction_limit_type"
+                             tableName="m_agent_transaction_limit"/>
+        <addForeignKeyConstraint baseColumnNames="agent_id" baseTableName="m_agent_transaction_limit"
+                                 constraintName="fk_m_agent_transaction_limit_agent" referencedColumnNames="id"
+                                 referencedTableName="m_agent" onDelete="CASCADE"/>
+        <addForeignKeyConstraint baseColumnNames="created_by" baseTableName="m_agent_transaction_limit"
+                                 constraintName="fk_m_agent_transaction_limit_created_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="last_modified_by" baseTableName="m_agent_transaction_limit"
+                                 constraintName="fk_m_agent_transaction_limit_modified_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <createIndex indexName="idx_m_agent_transaction_limit_agent" tableName="m_agent_transaction_limit">
+            <column name="agent_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="m_agent_transaction_limit"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet author="fineract" id="3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_agent_settlement"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_agent_settlement">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_m_agent_settlement"/>
+            </column>
+            <column name="agent_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="office_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="settlement_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expected_amount" type="DECIMAL(19, 6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="submitted_amount" type="DECIMAL(19, 6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_code" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status_enum" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reference_number" type="VARCHAR(100)"/>
+            <column name="notes" type="VARCHAR(1000)"/>
+            <column name="submitted_by_user_id" type="BIGINT"/>
+            <column name="submitted_on_date" type="DATE"/>
+            <column name="approved_by_user_id" type="BIGINT"/>
+            <column name="approved_on_date" type="DATE"/>
+            <column name="rejected_by_user_id" type="BIGINT"/>
+            <column name="rejected_on_date" type="DATE"/>
+            <column name="rejection_reason" type="VARCHAR(1000)"/>
+            <column name="cancelled_by_user_id" type="BIGINT"/>
+            <column name="cancelled_on_date" type="DATE"/>
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_on_utc" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_on_utc" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="agent_id" baseTableName="m_agent_settlement"
+                                 constraintName="fk_m_agent_settlement_agent" referencedColumnNames="id" referencedTableName="m_agent"/>
+        <addForeignKeyConstraint baseColumnNames="office_id" baseTableName="m_agent_settlement"
+                                 constraintName="fk_m_agent_settlement_office" referencedColumnNames="id" referencedTableName="m_office"/>
+        <addForeignKeyConstraint baseColumnNames="submitted_by_user_id" baseTableName="m_agent_settlement"
+                                 constraintName="fk_m_agent_settlement_submitted_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="approved_by_user_id" baseTableName="m_agent_settlement"
+                                 constraintName="fk_m_agent_settlement_approved_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="rejected_by_user_id" baseTableName="m_agent_settlement"
+                                 constraintName="fk_m_agent_settlement_rejected_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="cancelled_by_user_id" baseTableName="m_agent_settlement"
+                                 constraintName="fk_m_agent_settlement_cancelled_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="created_by" baseTableName="m_agent_settlement"
+                                 constraintName="fk_m_agent_settlement_created_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="last_modified_by" baseTableName="m_agent_settlement"
+                                 constraintName="fk_m_agent_settlement_modified_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <createIndex indexName="idx_m_agent_settlement_agent" tableName="m_agent_settlement">
+            <column name="agent_id"/>
+        </createIndex>
+        <createIndex indexName="idx_m_agent_settlement_office_status" tableName="m_agent_settlement">
+            <column name="office_id"/>
+            <column name="status_enum"/>
+        </createIndex>
+        <createIndex indexName="idx_m_agent_settlement_date" tableName="m_agent_settlement">
+            <column name="settlement_date"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="m_agent_settlement"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet author="fineract" id="4">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_agent_collection_transaction"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_agent_collection_transaction">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_m_agent_collection_transaction"/>
+            </column>
+            <column name="agent_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="office_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_type_enum" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="loan_id" type="BIGINT"/>
+            <column name="loan_transaction_id" type="BIGINT"/>
+            <column name="savings_account_id" type="BIGINT"/>
+            <column name="savings_transaction_id" type="BIGINT"/>
+            <column name="payment_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19, 6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_code" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status_enum" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="settlement_id" type="BIGINT"/>
+            <column name="settled_date" type="DATE"/>
+            <column name="external_id" type="VARCHAR(100)"/>
+            <column name="mobile_reference" type="VARCHAR(100)"/>
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_on_utc" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_on_utc" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <addUniqueConstraint columnNames="loan_transaction_id" constraintName="uk_m_agent_collection_loan_transaction"
+                             tableName="m_agent_collection_transaction"/>
+        <addUniqueConstraint columnNames="savings_transaction_id" constraintName="uk_m_agent_collection_savings_transaction"
+                             tableName="m_agent_collection_transaction"/>
+        <addForeignKeyConstraint baseColumnNames="agent_id" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_agent" referencedColumnNames="id" referencedTableName="m_agent"/>
+        <addForeignKeyConstraint baseColumnNames="office_id" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_office" referencedColumnNames="id" referencedTableName="m_office"/>
+        <addForeignKeyConstraint baseColumnNames="loan_id" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_loan" referencedColumnNames="id" referencedTableName="m_loan"/>
+        <addForeignKeyConstraint baseColumnNames="loan_transaction_id" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_loan_transaction" referencedColumnNames="id"
+                                 referencedTableName="m_loan_transaction"/>
+        <addForeignKeyConstraint baseColumnNames="savings_account_id" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_savings_account" referencedColumnNames="id"
+                                 referencedTableName="m_savings_account"/>
+        <addForeignKeyConstraint baseColumnNames="savings_transaction_id" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_savings_transaction" referencedColumnNames="id"
+                                 referencedTableName="m_savings_account_transaction"/>
+        <addForeignKeyConstraint baseColumnNames="payment_type_id" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_payment_type" referencedColumnNames="id"
+                                 referencedTableName="m_payment_type"/>
+        <addForeignKeyConstraint baseColumnNames="settlement_id" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_settlement" referencedColumnNames="id"
+                                 referencedTableName="m_agent_settlement"/>
+        <addForeignKeyConstraint baseColumnNames="created_by" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_created_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <addForeignKeyConstraint baseColumnNames="last_modified_by" baseTableName="m_agent_collection_transaction"
+                                 constraintName="fk_m_agent_collection_modified_by" referencedColumnNames="id"
+                                 referencedTableName="m_appuser"/>
+        <createIndex indexName="idx_m_agent_collection_agent_status" tableName="m_agent_collection_transaction">
+            <column name="agent_id"/>
+            <column name="status_enum"/>
+        </createIndex>
+        <createIndex indexName="idx_m_agent_collection_agent_daily" tableName="m_agent_collection_transaction">
+            <column name="agent_id"/>
+            <column name="transaction_date"/>
+            <column name="transaction_type_enum"/>
+            <column name="status_enum"/>
+        </createIndex>
+        <createIndex indexName="idx_m_agent_collection_office_status" tableName="m_agent_collection_transaction">
+            <column name="office_id"/>
+            <column name="status_enum"/>
+        </createIndex>
+        <createIndex indexName="idx_m_agent_collection_settlement" tableName="m_agent_collection_transaction">
+            <column name="settlement_id"/>
+        </createIndex>
+        <createIndex indexName="idx_m_agent_collection_pending" tableName="m_agent_collection_transaction">
+            <column name="agent_id"/>
+            <column name="status_enum"/>
+            <column name="settlement_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="m_agent_collection_transaction"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet author="fineract" id="5" context="mysql,postgresql">
+        <sql><![CDATA[
+            ALTER TABLE m_agent
+                ADD CONSTRAINT chk_m_agent_status_enum CHECK (status_enum IN (300, 400)),
+                ADD CONSTRAINT chk_m_agent_currency_code CHECK (char_length(currency_code) = 3),
+                ADD CONSTRAINT chk_m_agent_maximum_cash_in_hand CHECK (maximum_cash_in_hand > 0),
+                ADD CONSTRAINT chk_m_agent_max_daily_total CHECK (maximum_daily_total_collection > 0);
+
+            ALTER TABLE m_agent_transaction_limit
+                ADD CONSTRAINT chk_m_agent_transaction_limit_type CHECK (transaction_type_enum IN (1, 2)),
+                ADD CONSTRAINT chk_m_agent_transaction_limit_single CHECK (maximum_single_amount IS NULL OR maximum_single_amount >= 0),
+                ADD CONSTRAINT chk_m_agent_transaction_limit_daily CHECK (maximum_daily_amount IS NULL OR maximum_daily_amount >= 0);
+
+            ALTER TABLE m_agent_settlement
+                ADD CONSTRAINT chk_m_agent_settlement_status_enum CHECK (status_enum IN (100, 200, 300, 400, 500)),
+                ADD CONSTRAINT chk_m_agent_settlement_currency_code CHECK (char_length(currency_code) = 3),
+                ADD CONSTRAINT chk_m_agent_settlement_expected_amount CHECK (expected_amount > 0),
+                ADD CONSTRAINT chk_m_agent_settlement_submitted_amount CHECK (submitted_amount > 0);
+
+            ALTER TABLE m_agent_collection_transaction
+                ADD CONSTRAINT chk_m_agent_collection_type CHECK (transaction_type_enum IN (1, 2)),
+                ADD CONSTRAINT chk_m_agent_collection_status CHECK (status_enum IN (100, 200, 300, 400)),
+                ADD CONSTRAINT chk_m_agent_collection_amount CHECK (amount > 0),
+                ADD CONSTRAINT chk_m_agent_collection_currency CHECK (char_length(currency_code) = 3),
+                ADD CONSTRAINT chk_m_agent_collection_loan_ref
+                    CHECK (transaction_type_enum <> 1 OR (loan_id IS NOT NULL AND loan_transaction_id IS NOT NULL)),
+                ADD CONSTRAINT chk_m_agent_collection_savings_ref
+                    CHECK (transaction_type_enum <> 2 OR (savings_account_id IS NOT NULL AND savings_transaction_id IS NOT NULL));
+        ]]></sql>
+        <rollback><![CDATA[
+            ALTER TABLE m_agent_collection_transaction DROP CONSTRAINT chk_m_agent_collection_savings_ref;
+            ALTER TABLE m_agent_collection_transaction DROP CONSTRAINT chk_m_agent_collection_loan_ref;
+            ALTER TABLE m_agent_collection_transaction DROP CONSTRAINT chk_m_agent_collection_currency;
+            ALTER TABLE m_agent_collection_transaction DROP CONSTRAINT chk_m_agent_collection_amount;
+            ALTER TABLE m_agent_collection_transaction DROP CONSTRAINT chk_m_agent_collection_status;
+            ALTER TABLE m_agent_collection_transaction DROP CONSTRAINT chk_m_agent_collection_type;
+
+            ALTER TABLE m_agent_settlement DROP CONSTRAINT chk_m_agent_settlement_submitted_amount;
+            ALTER TABLE m_agent_settlement DROP CONSTRAINT chk_m_agent_settlement_expected_amount;
+            ALTER TABLE m_agent_settlement DROP CONSTRAINT chk_m_agent_settlement_currency_code;
+            ALTER TABLE m_agent_settlement DROP CONSTRAINT chk_m_agent_settlement_status_enum;
+
+            ALTER TABLE m_agent_transaction_limit DROP CONSTRAINT chk_m_agent_transaction_limit_daily;
+            ALTER TABLE m_agent_transaction_limit DROP CONSTRAINT chk_m_agent_transaction_limit_single;
+            ALTER TABLE m_agent_transaction_limit DROP CONSTRAINT chk_m_agent_transaction_limit_type;
+
+            ALTER TABLE m_agent DROP CONSTRAINT chk_m_agent_max_daily_total;
+            ALTER TABLE m_agent DROP CONSTRAINT chk_m_agent_maximum_cash_in_hand;
+            ALTER TABLE m_agent DROP CONSTRAINT chk_m_agent_currency_code;
+            ALTER TABLE m_agent DROP CONSTRAINT chk_m_agent_status_enum;
+        ]]></rollback>
+    </changeSet>
+
+    <changeSet author="fineract" id="6">
+        <sql><![CDATA[
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'READ_AGENT', 'AGENT', 'READ', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'READ_AGENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'CREATE_AGENT', 'AGENT', 'CREATE', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'CREATE_AGENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'UPDATE_AGENT', 'AGENT', 'UPDATE', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'UPDATE_AGENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'ACTIVATE_AGENT', 'AGENT', 'ACTIVATE', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'ACTIVATE_AGENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'DEACTIVATE_AGENT', 'AGENT', 'DEACTIVATE', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'DEACTIVATE_AGENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'CREATE_AGENT_COLLECTION', 'AGENT_COLLECTION', 'CREATE', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'CREATE_AGENT_COLLECTION');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'READ_AGENT_COLLECTION', 'AGENT_COLLECTION', 'READ', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'READ_AGENT_COLLECTION');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'REVERSE_AGENT_COLLECTION', 'AGENT_COLLECTION', 'REVERSE', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'REVERSE_AGENT_COLLECTION');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'READ_AGENT_CASH_BALANCE', 'AGENT_CASH_BALANCE', 'READ', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'READ_AGENT_CASH_BALANCE');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'READ_ALL_AGENT_CASH_BALANCES', 'AGENT_CASH_BALANCE', 'READ_ALL', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'READ_ALL_AGENT_CASH_BALANCES');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'READ_AGENT_SETTLEMENT', 'AGENT_SETTLEMENT', 'READ', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'READ_AGENT_SETTLEMENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'CREATE_AGENT_SETTLEMENT', 'AGENT_SETTLEMENT', 'CREATE', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'CREATE_AGENT_SETTLEMENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'SUBMIT_AGENT_SETTLEMENT', 'AGENT_SETTLEMENT', 'SUBMIT', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'SUBMIT_AGENT_SETTLEMENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'APPROVE_AGENT_SETTLEMENT', 'AGENT_SETTLEMENT', 'APPROVE', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'APPROVE_AGENT_SETTLEMENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'REJECT_AGENT_SETTLEMENT', 'AGENT_SETTLEMENT', 'REJECT', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'REJECT_AGENT_SETTLEMENT');
+
+            INSERT INTO m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+            SELECT 'organisation', 'CANCEL_AGENT_SETTLEMENT', 'AGENT_SETTLEMENT', 'CANCEL', false
+            WHERE NOT EXISTS (SELECT 1 FROM m_permission WHERE code = 'CANCEL_AGENT_SETTLEMENT');
+        ]]></sql>
+        <rollback><![CDATA[
+            DELETE FROM m_permission WHERE code IN (
+                'READ_AGENT',
+                'CREATE_AGENT',
+                'UPDATE_AGENT',
+                'ACTIVATE_AGENT',
+                'DEACTIVATE_AGENT',
+                'CREATE_AGENT_COLLECTION',
+                'READ_AGENT_COLLECTION',
+                'REVERSE_AGENT_COLLECTION',
+                'READ_AGENT_CASH_BALANCE',
+                'READ_ALL_AGENT_CASH_BALANCES',
+                'READ_AGENT_SETTLEMENT',
+                'CREATE_AGENT_SETTLEMENT',
+                'SUBMIT_AGENT_SETTLEMENT',
+                'APPROVE_AGENT_SETTLEMENT',
+                'REJECT_AGENT_SETTLEMENT',
+                'CANCEL_AGENT_SETTLEMENT'
+            );
+        ]]></rollback>
+    </changeSet>
+</databaseChangeLog>

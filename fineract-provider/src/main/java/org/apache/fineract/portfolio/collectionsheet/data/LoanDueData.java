@@ -111,6 +111,10 @@ public class LoanDueData {
         return this.chargesDue;
     }
 
+    public BigDecimal getTotalDue() {
+        return this.totalDue;
+    }
+
     public BigDecimal getFeeDue() {
         return this.feeDue;
     }

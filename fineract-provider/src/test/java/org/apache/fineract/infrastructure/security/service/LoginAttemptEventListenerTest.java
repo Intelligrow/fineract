@@ -199,6 +199,6 @@ class LoginAttemptEventListenerTest {
     private AppUser buildUser(String username, boolean cannotChangePassword) {
         Office office = mock(Office.class);
         User springUser = new User(username, "pass", true, true, true, true, List.of(new SimpleGrantedAuthority("ALL_FUNCTIONS")));
-        return new AppUser(office, springUser, new HashSet<>(), "user@example.com", "First", "Last", null, false, cannotChangePassword);
+        return new AppUser(office, springUser, new HashSet<>(), "user@example.com", "First", "Last", null, false, cannotChangePassword, null);
     }
 }
