@@ -617,9 +617,6 @@ public class Charge extends AbstractPersistableCustom<Long> {
         if (command.isChangeInLongParameterNamed(ChargesApiConstants.taxGroupIdParamName, getTaxGroupId())) {
             final Long newValue = command.longValueOfParameterNamed(ChargesApiConstants.taxGroupIdParamName);
             actualChanges.put(ChargesApiConstants.taxGroupIdParamName, newValue);
-            if (taxGroup != null) {
-                baseDataValidator.reset().parameter(ChargesApiConstants.taxGroupIdParamName).failWithCode("modification.not.supported");
-            }
         }
 
         if (!dataValidationErrors.isEmpty()) {
