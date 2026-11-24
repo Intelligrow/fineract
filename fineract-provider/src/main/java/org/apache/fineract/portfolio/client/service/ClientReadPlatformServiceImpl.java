@@ -479,7 +479,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
         final String hierarchySearchString = hierarchy + "%";
 
         final String sql = "select " + this.membersOfGroupMapper.schema()
-                + " left join m_group g on pgc.group_id=g.id where o.hierarchy like ? and g.parent_id = ? and c.status_enum = ? group by c.id";
+                + " left join m_group g on pgc.group_id=g.id where o.hierarchy like ? and g.parent_id = ? and c.status_enum = ?";
 
         return this.jdbcTemplate.query(sql, this.membersOfGroupMapper, // NOSONAR
                 hierarchySearchString, centerId, ClientStatus.ACTIVE.getValue());

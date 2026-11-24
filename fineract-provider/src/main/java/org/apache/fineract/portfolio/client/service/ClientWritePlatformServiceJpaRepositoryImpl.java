@@ -411,7 +411,9 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
 
             final Client clientForUpdate = this.clientRepository.findOneWithNotFoundDetection(clientId);
             final String clientHierarchy = clientForUpdate.getOffice().getHierarchy();
-
+            final AppUser currentUser = this.context.authenticatedUser();
+            final Locale locale = command.extractLocale();
+            final DateTimeFormatter fmt = DateTimeFormatter.ofPattern(command.dateFormat()).withLocale(locale);
             this.context.validateAccessRights(clientHierarchy);
 
             final Map<String, Object> changes = new LinkedHashMap<>(9);
@@ -525,8 +527,14 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                 changes.put(ClientApiConstants.dateFormatParamName, dateFormatAsInput);
                 changes.put(ClientApiConstants.localeParamName, localeAsInput);
 
-                clientForUpdate.setActivationDate(command.localDateValueOfParameterNamed(ClientApiConstants.activationDateParamName));
-                clientForUpdate.setOfficeJoiningDate(clientForUpdate.getActivationDate());
+                final LocalDate activationDate = command.localDateValueOfParameterNamed(ClientApiConstants.activationDateParamName);
+                if (activationDate != null && !clientForUpdate.isActive()) {
+                    clientForUpdate.activate(currentUser, fmt, activationDate);
+                    changes.put(ClientApiConstants.statusParamName, ClientEnumerations.status(ClientStatus.ACTIVE.getValue()));
+                }else{
+                    clientForUpdate.setActivationDate(command.localDateValueOfParameterNamed(ClientApiConstants.activationDateParamName));
+                    clientForUpdate.setOfficeJoiningDate(clientForUpdate.getActivationDate());
+                }
             }
 
             if (command.isChangeInLocalDateParameterNamed(ClientApiConstants.dateOfBirthParamName, clientForUpdate.getDateOfBirth())) {

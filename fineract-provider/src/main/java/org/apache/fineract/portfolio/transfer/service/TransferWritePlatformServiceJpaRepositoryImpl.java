@@ -290,10 +290,16 @@ public class TransferWritePlatformServiceJpaRepositoryImpl implements TransferWr
         final Long destinationOfficeId = jsonCommand.longValueOfParameterNamed(TransferApiConstants.destinationOfficeIdParamName);
         final Office office = this.officeRepository.findOneWithNotFoundDetection(destinationOfficeId);
         final Client client = this.clientRepositoryWrapper.findOneWithNotFoundDetection(clientId);
+        final LocalDate transferDate = jsonCommand.localDateValueOfParameterNamed(TransferApiConstants.transferDate);
         if (client.getOffice().getId().equals(destinationOfficeId)) {
             throw new GeneralPlatformDomainRuleException(TransferApiConstants.transferClientToSameOfficeException,
                     TransferApiConstants.transferClientToSameOfficeExceptionMessage, office.getName());
 
+        }
+        if (transferDate.isBefore(client.getActivationDate())) {
+            throw new GeneralPlatformDomainRuleException(
+                    TransferApiConstants.transferClientBeforeCreationDateException,
+                    TransferApiConstants.transferClientBeforeCreationDateExceptionMessage);
         }
         handleClientTransferLifecycleEvent(client, office, TransferEventType.PROPOSAL, jsonCommand);
         this.clientRepositoryWrapper.saveAndFlush(client);
