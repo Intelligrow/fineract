@@ -536,7 +536,10 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
     }
 
     public boolean isWithHoldTaxApplicableForInterestPosting() {
-        return this.withHoldTax() && this.depositAccountType() == DepositAccountType.SAVINGS_DEPOSIT;
+        return this.withHoldTax()
+                &&  (this.depositAccountType() == DepositAccountType.SAVINGS_DEPOSIT
+                || this.depositAccountType() == DepositAccountType.FIXED_DEPOSIT
+                || this.depositAccountType() == DepositAccountType.RECURRING_DEPOSIT);
     }
 
     public SavingsAccountTransaction findInterestPostingTransactionFor(final LocalDate postingDate) {
