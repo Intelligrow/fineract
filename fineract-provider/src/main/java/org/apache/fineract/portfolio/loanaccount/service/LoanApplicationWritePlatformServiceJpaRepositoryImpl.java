@@ -465,7 +465,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             final String accountNo = command.stringValueOfParameterNamed("accountNo");
             throw new PlatformDataIntegrityException("error.msg.loan.duplicate.accountNo",
                     "Loan with accountNo `" + accountNo + "` already exists", "accountNo", accountNo);
-        } else if (realCause.getMessage().contains("loan_externalid_UNIQUE")
+        } else if (realCause.getMessage().contains("external_id")
                 || (realCause.getCause() != null && realCause.getCause().getMessage().contains("loan_externalid_UNIQUE"))
                 || realCause.getMessage().toLowerCase().contains("external_id_unique")) {
             final String externalId = command.stringValueOfParameterNamed("externalId");
