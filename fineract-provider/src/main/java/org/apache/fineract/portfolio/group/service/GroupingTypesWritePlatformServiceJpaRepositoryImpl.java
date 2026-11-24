@@ -743,7 +743,7 @@ public class GroupingTypesWritePlatformServiceJpaRepositoryImpl implements Group
 
         String errorMessageForUser = null;
         String errorMessageForMachine = null;
-        if (realCause.getMessage().contains("'external_id'")) {
+        if (realCause.getMessage().contains("external_id")) {
             final String externalId = command.stringValueOfParameterNamed(GroupingTypesApiConstants.externalIdParamName);
             errorMessageForUser = levelName + " with externalId `" + externalId + "` already exists.";
             errorMessageForMachine = "error.msg." + levelName.toLowerCase() + ".duplicate.externalId";

@@ -58,6 +58,7 @@ import org.apache.fineract.organisation.staff.data.StaffData;
 import org.apache.fineract.organisation.staff.data.StaffUpdateRequest;
 import org.apache.fineract.organisation.staff.data.StaffUpdateResponse;
 import org.apache.fineract.organisation.staff.data.StaffUploadRequest;
+import org.apache.fineract.organisation.staff.data.StaffUploadResponse;
 import org.apache.fineract.organisation.staff.service.StaffReadService;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -194,7 +195,7 @@ public class StaffApiResource {
         command.setPayload(StaffUploadRequest.builder().uploadedInputStream(uploadedInputStream).fileDetail(fileDetail).locale(locale)
                 .dateFormat(dateFormat).build());
 
-        final Supplier<StaffUpdateResponse> response = dispatcher.dispatch(command);
+        final Supplier<StaffUploadResponse> response = dispatcher.dispatch(command);
 
         // TODO: return the whole body, a number is not a valid JSON element!
         return response.get().getResourceId();

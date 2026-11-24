@@ -744,17 +744,6 @@ public final class LoanApplicationValidator {
 
             validateBorrowerCycle(element, loanProduct, clientId, groupId, baseDataValidator);
 
-            // Validate If the externalId is already registered
-            final String externalIdStr = this.fromApiJsonHelper.extractStringNamed("externalId", element);
-            ExternalId externalId = ExternalIdFactory.produce(externalIdStr);
-            if (!externalId.isEmpty()) {
-                final boolean existByExternalId = this.loanRepositoryWrapper.existLoanByExternalId(externalId);
-                if (existByExternalId) {
-                    throw new GeneralPlatformDomainRuleException("error.msg.loan.with.externalId.already.used",
-                            "Loan with externalId is already registered.");
-                }
-            }
-
             loanScheduleValidator.validateDownPaymentAttribute(loanProduct.getLoanProductRelatedDetail().isEnableDownPayment(), element);
 
             checkForProductMixRestrictions(element);

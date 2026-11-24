@@ -213,7 +213,7 @@ public class MeetingWriteServiceImpl implements MeetingWriteService {
             } else if (CalendarEntityType.isCenter(meeting.getCalendarInstance().getEntityTypeId())) {
                 if (CalendarEntityType.isCenter(meeting.getCalendarInstance().getEntityTypeId())) {
                     var size = groupRepository.findByParentId(meeting.getCalendarInstance().getEntityId()).stream()
-                            .filter(group -> group.isChildClient(attendance.getId())).count();
+                            .filter(group -> group.isChildClient(attendance.getClientId())).count();
 
                     if (size == 0L) {
                         throw new ClientNotInGroupException("client.not.in.center",
