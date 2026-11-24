@@ -70,4 +70,23 @@ public class ClientNonPersonData implements Serializable {
         this.remarks = remarks;
     }
 
+    public CodeValueData getConstitution() {
+        return constitution;
+    }
+
+    public String getIncorpNumber() {
+        return incorpNumber;
+    }
+
+    public LocalDate getIncorpValidityTillDate() {
+        return incorpValidityTillDate;
+    }
+
+    public CodeValueData getMainBusinessLine() {
+        return mainBusinessLine;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
 }

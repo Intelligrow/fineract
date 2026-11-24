@@ -44,4 +44,6 @@ public final class TransferApiConstants {
     public static final String transferClientSavingsExceptionMessage = "error msg cannot transfer client as savings transaction present on or after transfer date";
     public static final String transferClientToSameOfficeException = "error.msg.cannot.transfer.client.as.selected.office.and.current.office.are.same";
     public static final String transferClientToSameOfficeExceptionMessage = "error.msg.cannot.transfer.client.as.selected.office.and.current.office.are.same";
+    public static final String transferClientBeforeCreationDateException = "error.msg.cannot.transfer.client.before.creation.date";
+    public static final String transferClientBeforeCreationDateExceptionMessage = "Cannot transfer client before client creation date.";
 }
