@@ -137,7 +137,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
             msg = "Savings account with accountNo " + accountNo + " already exists";
             param = "accountNo";
             msgArgs = new Object[] { accountNo, dve };
-        } else if (checkEx.getMessage().contains("sa_external_id_UNIQUE")) {
+        } else if (checkEx.getMessage().contains("external_id")) {
             final String externalId = command.stringValueOfParameterNamed("externalId");
             msgCode += ".duplicate.externalId";
             msg = "Savings account with externalId " + externalId + " already exists";

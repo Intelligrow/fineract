@@ -86,6 +86,7 @@ import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.exception.InvalidJsonException;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
+import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.portfolio.savings.DepositAccountOnClosureType;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
 import org.apache.fineract.portfolio.savings.DepositsApiConstants;
@@ -95,7 +96,8 @@ import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYea
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
 import org.apache.fineract.portfolio.savings.SavingsPostingInterestPeriodType;
-import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
+import org.apache.fineract.portfolio.savings.domain.*;
+import org.apache.fineract.portfolio.savings.exception.FixedDepositProductNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -104,11 +106,16 @@ public class DepositAccountDataValidator {
 
     private final FromJsonHelper fromApiJsonHelper;
     private final DepositProductDataValidator productDataValidator;
+    private final FixedDepositProductRepository fixedDepositProductRepository;
+    private final RecurringDepositProductRepository recurringDepositProductRepository;
 
     @Autowired
-    public DepositAccountDataValidator(final FromJsonHelper fromApiJsonHelper, final DepositProductDataValidator productDataValidator) {
+    public DepositAccountDataValidator(final FromJsonHelper fromApiJsonHelper, final DepositProductDataValidator productDataValidator,
+                                       final FixedDepositProductRepository fixedDepositProductRepository, final RecurringDepositProductRepository recurringDepositProductRepository) {
         this.fromApiJsonHelper = fromApiJsonHelper;
         this.productDataValidator = productDataValidator;
+        this.fixedDepositProductRepository = fixedDepositProductRepository;
+        this.recurringDepositProductRepository = recurringDepositProductRepository;
     }
 
     public void validateFixedDepositForSubmit(final String json) {
@@ -125,7 +132,12 @@ public class DepositAccountDataValidator {
                 .resource(DepositsApiConstants.FIXED_DEPOSIT_ACCOUNT_RESOURCE_NAME);
         final JsonElement element = this.fromApiJsonHelper.parse(json);
 
+        final Long productId = this.fromApiJsonHelper.extractLongNamed("productId", element);
+        final FixedDepositProduct depositProduct = this.fixedDepositProductRepository.findById(productId)
+                .orElseThrow(() -> new FixedDepositProductNotFoundException(productId));
+
         validateDepositDetailsForSubmit(element, baseDataValidator);
+        validateMinMaxDepositAmount(element, depositProduct, baseDataValidator, DepositAccountType.FIXED_DEPOSIT);
         validatePreClosureDetailForSubmit(element, baseDataValidator);
         validateDepositTermDeatilForSubmit(element, baseDataValidator, DepositAccountType.FIXED_DEPOSIT);
         validateSavingsCharges(element, baseDataValidator);
@@ -148,7 +160,12 @@ public class DepositAccountDataValidator {
                 .resource(DepositsApiConstants.FIXED_DEPOSIT_ACCOUNT_RESOURCE_NAME);
         final JsonElement element = this.fromApiJsonHelper.parse(json);
 
+        final Long productId = this.fromApiJsonHelper.extractLongNamed("productId", element);
+        final FixedDepositProduct depositProduct = this.fixedDepositProductRepository.findById(productId)
+                .orElseThrow(() -> new FixedDepositProductNotFoundException(productId));
+
         validateDepositDetailsForUpdate(element, baseDataValidator);
+        validateMinMaxDepositAmount(element, depositProduct, baseDataValidator, DepositAccountType.FIXED_DEPOSIT);
         validatePreClosureDetailForUpdate(element, baseDataValidator);
         validateDepositTermDeatilForUpdate(element, baseDataValidator, DepositAccountType.FIXED_DEPOSIT);
         // validateSavingsCharges(element, baseDataValidator);
@@ -171,7 +188,12 @@ public class DepositAccountDataValidator {
                 .resource(DepositsApiConstants.RECURRING_DEPOSIT_ACCOUNT_RESOURCE_NAME);
         final JsonElement element = this.fromApiJsonHelper.parse(json);
 
+        final Long productId = this.fromApiJsonHelper.extractLongNamed("productId", element);
+        final RecurringDepositProduct depositProduct = this.recurringDepositProductRepository.findById(productId)
+                .orElseThrow(() -> new FixedDepositProductNotFoundException(productId));
+
         validateDepositDetailsForSubmit(element, baseDataValidator);
+        validateMinMaxDepositAmount(element, depositProduct, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         validatePreClosureDetailForSubmit(element, baseDataValidator);
         validateDepositTermDeatilForSubmit(element, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         validateRecurringDetailForSubmit(element, baseDataValidator);
@@ -195,7 +217,12 @@ public class DepositAccountDataValidator {
                 .resource(DepositsApiConstants.RECURRING_DEPOSIT_ACCOUNT_RESOURCE_NAME);
         final JsonElement element = this.fromApiJsonHelper.parse(json);
 
+        final Long productId = this.fromApiJsonHelper.extractLongNamed("productId", element);
+        final RecurringDepositProduct depositProduct = this.recurringDepositProductRepository.findById(productId)
+                .orElseThrow(() -> new FixedDepositProductNotFoundException(productId));
+
         validateDepositDetailsForUpdate(element, baseDataValidator);
+        validateMinMaxDepositAmount(element, depositProduct, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         validatePreClosureDetailForUpdate(element, baseDataValidator);
         validateDepositTermDeatilForUpdate(element, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         validateRecurringDetailForUpdate(element, baseDataValidator);
@@ -802,6 +829,39 @@ public class DepositAccountDataValidator {
         if (this.fromApiJsonHelper.parameterExists(withHoldTaxParamName, element)) {
             final String withHoldTax = this.fromApiJsonHelper.extractStringNamed(withHoldTaxParamName, element);
             baseDataValidator.reset().parameter(withHoldTaxParamName).value(withHoldTax).ignoreIfNull().validateForBooleanValue();
+        }
+    }
+    private void validateMinMaxDepositAmount(final JsonElement element, final SavingsProduct depositProduct,
+                                             final DataValidatorBuilder baseDataValidator, final DepositAccountType depositAccountType) {
+
+        final DepositProductAmountDetails amountDetails;
+        final String amountParameterName;
+
+        if (depositAccountType == DepositAccountType.FIXED_DEPOSIT) {
+            amountDetails = ((FixedDepositProduct) depositProduct).depositProductTermAndPreClosure().depositProductAmountDetails();
+            amountParameterName = depositAmountParamName;
+
+        } else if (depositAccountType == DepositAccountType.RECURRING_DEPOSIT) {
+            amountDetails = ((RecurringDepositProduct) depositProduct).depositProductTermAndPreClosure().depositProductAmountDetails();
+            amountParameterName = mandatoryRecommendedDepositAmountParamName;
+
+        } else {
+            return;
+        }
+
+        final BigDecimal depositAmount = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(amountParameterName, element);
+        final BigDecimal minDepositAmount = amountDetails.getMinDepositAmount();
+        final BigDecimal maxDepositAmount = amountDetails.getMaxDepositAmount();
+
+        if (minDepositAmount != null && minDepositAmount.compareTo(BigDecimal.ZERO) > 0 && maxDepositAmount != null && maxDepositAmount.compareTo(BigDecimal.ZERO) > 0) {
+            baseDataValidator.reset().parameter(amountParameterName).value(depositAmount).inMinAndMaxAmountRange(MathUtil.stripTrailingZeros(minDepositAmount), MathUtil.stripTrailingZeros(maxDepositAmount));
+
+        } else if (minDepositAmount != null && minDepositAmount.compareTo(BigDecimal.ZERO) > 0) {
+            baseDataValidator.reset().parameter(amountParameterName).value(depositAmount).notLessThanMin(MathUtil.stripTrailingZeros(minDepositAmount));
+
+        } else if (maxDepositAmount != null && maxDepositAmount.compareTo(BigDecimal.ZERO) > 0) {
+            baseDataValidator.reset().parameter(amountParameterName).value(depositAmount).notGreaterThanMax(MathUtil.stripTrailingZeros(minDepositAmount));
+
         }
     }
 
