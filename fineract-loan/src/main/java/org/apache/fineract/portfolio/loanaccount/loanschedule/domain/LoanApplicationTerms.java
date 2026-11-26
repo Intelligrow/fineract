@@ -1377,7 +1377,7 @@ public final class LoanApplicationTerms {
             }
             if (!this.periodNumbersApplicableForInterestGrace.isEmpty()) {
                 int periodsElapsed = calculateLastInterestGracePeriod(periodNumber);
-                if (periodsElapsed > this.excludePeriodsForCalculation && periodsElapsed > this.periodsCompleted) {
+                if (this.excludePeriodsForCalculation > 0 && periodsElapsed > this.excludePeriodsForCalculation && periodsElapsed > this.periodsCompleted) {
                     Money interestLeft = this.totalInterestDue.minus(this.totalInterestAccounted);
                     Integer interestDuePeriods = calculateNumberOfRemainingInterestPaymentPeriods(this.actualNumberOfRepayments,
                             periodsElapsed);
@@ -1538,7 +1538,8 @@ public final class LoanApplicationTerms {
          * if grace period available then need to be subtracted
          */
         if (this.interestChargingGrace != null) {
-            periodsRemaining = periodsRemaining - this.interestChargingGrace;
+            int interestFreePeriod = Math.max(0,(this.interestChargingGrace-principalFeePeriods));
+            periodsRemaining = periodsRemaining - interestFreePeriod;
         }
         return periodsRemaining;
     }

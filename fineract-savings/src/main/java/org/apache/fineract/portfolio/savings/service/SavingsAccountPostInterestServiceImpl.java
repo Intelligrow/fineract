@@ -89,12 +89,12 @@ public class SavingsAccountPostInterestServiceImpl implements SavingsAccountPost
                     postingTransaction = account.findInterestPostingTransactionFor(interestPostingTransactionDate);
                 }
                 if (postingTransaction == null) {
-                    SavingsAccountTransaction newPostingTransaction;
-                    if (interestEarnedToBePostedForPeriod.isGreaterThanOrEqualTo(Money.zero(account.getCurrency()))) {
+                    SavingsAccountTransaction newPostingTransaction = null;
+                    if (interestEarnedToBePostedForPeriod.isGreaterThan(Money.zero(account.getCurrency()))) {
 
                         newPostingTransaction = SavingsAccountTransaction.interestPosting(account, account.office(),
                                 interestPostingTransactionDate, interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting());
-                    } else {
+                    } else if(account.isAllowOverdraft()){
                         newPostingTransaction = SavingsAccountTransaction.overdraftInterest(account, account.office(),
                                 interestPostingTransactionDate, interestEarnedToBePostedForPeriod.negated(),
                                 interestPostingPeriod.isUserPosting());
@@ -102,7 +102,7 @@ public class SavingsAccountPostInterestServiceImpl implements SavingsAccountPost
                     if (backdatedTxnsAllowedTill) {
                         account.addTransactionToExisting(newPostingTransaction);
                     } else {
-                        account.addTransaction(newPostingTransaction);
+                        if(newPostingTransaction != null) account.addTransaction(newPostingTransaction);
                     }
                     if (applyWithHoldTax) {
                         account.createWithHoldTransaction(interestEarnedToBePostedForPeriod.getAmount(), interestPostingTransactionDate,
@@ -129,12 +129,12 @@ public class SavingsAccountPostInterestServiceImpl implements SavingsAccountPost
                             withholdTransaction.reverse();
                             applyWithHoldTaxForOldTransaction = true;
                         }
-                        SavingsAccountTransaction newPostingTransaction;
-                        if (interestEarnedToBePostedForPeriod.isGreaterThanOrEqualTo(Money.zero(account.getCurrency()))) {
+                        SavingsAccountTransaction newPostingTransaction = null;
+                        if (interestEarnedToBePostedForPeriod.isGreaterThan(Money.zero(account.getCurrency()))) {
                             newPostingTransaction = SavingsAccountTransaction.interestPosting(account, account.office(),
                                     interestPostingTransactionDate, interestEarnedToBePostedForPeriod,
                                     interestPostingPeriod.isUserPosting());
-                        } else {
+                        } else if(account.isAllowOverdraft()) {
                             newPostingTransaction = SavingsAccountTransaction.overdraftInterest(account, account.office(),
                                     interestPostingTransactionDate, interestEarnedToBePostedForPeriod.negated(),
                                     interestPostingPeriod.isUserPosting());
@@ -145,7 +145,7 @@ public class SavingsAccountPostInterestServiceImpl implements SavingsAccountPost
                                 account.addTransactionToExisting(reversal);
                             }
                         } else {
-                            account.addTransaction(newPostingTransaction);
+                            if(newPostingTransaction != null) account.addTransaction(newPostingTransaction);
                             if (reversal != null) {
                                 account.addTransaction(reversal);
                             }
